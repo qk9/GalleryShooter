@@ -3,7 +3,7 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         super(scene, x, y, jointTexture, frame);
         this.positions = positions;
         this.pos = 2;
-        this.movementSpeed = 4;
+        this.movementTime = 800;
         this.mKey = mKey;
         this.fireKey = fireKey;
 
@@ -12,9 +12,9 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         this.setScale(1);
 
         // joint angles
-        this.angInner = 2 * Math.PI / -3;
-        this.angMiddle = Math.PI / 10;
-        this.angOuter = Math.PI / -2;
+        this.angInner = 2 * Math.PI / -3; // angle of innermost joint
+        this.angMiddle = Math.PI / 10; // angle of middle joint
+        this.angOuter = Math.PI / -2; // angle of outermost joint
 
         // inner arm
         this.armInner = this.scene.add.sprite(this.x + (35 * Math.cos(this.angInner)), this.y + (35 * Math.sin(this.angInner)), armTexture)
@@ -32,7 +32,7 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         this.armOuter.setScale(1);
         this.armOuter.setRotation(this.angMiddle + (Math.PI / 2));
 
-        // outer joint
+        // outermost joint
         this.jointOuter = this.scene.add.sprite(this.jointMiddle.x + (107 * Math.cos(this.angMiddle)), this.jointMiddle.y + (107 * Math.sin(this.angMiddle)), jointTexture);
         this.jointOuter.setScale(0.6);
         this.jointOuter.setRotation(this.angOuter + (Math.PI / 2));
@@ -43,23 +43,28 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         
         // place arms above joints
         this.scene.children.bringToTop(this.armInner);
-        this.scene.children.bringToTop(this.jointOuter);
         this.scene.children.bringToTop(this.armOuter);
+        this.scene.children.bringToTop(this.barrel);
 
+        // coordinates for fire()
+        this.targetX = 0;
+        this.targetY = 0;
 
         scene.add.existing(this);
         return this;
     }
 
     update() {
+        // listen for inputs
         if (Phaser.Input.Keyboard.JustDown(this.mKey)) {
             this.move();
         }
 
         if(Phaser.Input.Keyboard.JustDown(this.fireKey)) {
-            this.fire();
+            this.attack();
         }
 
+        // adjust arms and joints to correct positions
         this.armInner.x = this.x + (35 * Math.cos(this.angInner));
         this.armInner.y = this.y + (35 * Math.sin(this.angInner));
         this.armInner.setRotation(this.angInner + (Math.PI / 2));
@@ -92,8 +97,8 @@ class GunStrong extends Phaser.GameObjects.Sprite {
             this.currBaseTwistTween.stop();
             this.currBaseTwistTween.destroy();
         }
-        let newPos = this.positions[x];
-        let tweenDur = Math.abs(this.x - newPos) * this.movementSpeed;
+        let newPos = x;
+        let tweenDur = this.movementTime/*Math.abs(this.x - newPos) * this.movementSpeed*/;
         this.currMoveTween = this.scene.tweens.add({
             targets: this,
             x: newPos,
@@ -114,13 +119,12 @@ class GunStrong extends Phaser.GameObjects.Sprite {
             this.currInnerTwistTween.stop();
             this.currInnerTwistTween.destroy();
         }
-        let tweenDur = Math.abs(inRads) / Math.PI * 1000;
+        let tweenDur = this.movementTime/*Math.abs(this.inRads - endAngle) / Math.PI * 1000*/;
         this.currInnerTwistTween = this.scene.tweens.add({
             targets: this,
             angInner: inRads,
             duration: tweenDur,
             ease: 'Quad.easeInOut',
-            onStop: this.tweenEnded
         })
         this.currInnerVisualTween = this.scene.tweens.add({
             targets: this,
@@ -131,6 +135,16 @@ class GunStrong extends Phaser.GameObjects.Sprite {
     }
 
     twistMiddleToAngle(inRads) {
+        let endAngle = inRads;
+        // prevent middle joint from pointing too close to straight down
+        if (Math.abs(Math.PI / 2 - endAngle) < Math.PI / 4) {
+            if (endAngle > Math.PI / 2) {
+                endAngle = 3 * Math.PI / 4;
+            }
+            else {
+                endAngle = 1 * Math.PI / 4;
+            }
+        }
         if (this.currMiddleTwistTween) {
             this.currMiddleTwistTween.stop();
             this.currMiddleTwistTween.destroy();
@@ -139,17 +153,16 @@ class GunStrong extends Phaser.GameObjects.Sprite {
             this.currMiddleVisualTween.stop();
             this.currMiddleVisualTween.destroy();
         }
-        let tweenDur = Math.abs(inRads) / Math.PI * 1000;
+        let tweenDur = this.movementTime/*Math.abs(this.angMiddle - endAngle) / Math.PI * 1000*/;
         this.currMiddleTwistTween = this.scene.tweens.add({
             targets: this,
-            angMiddle: inRads,
+            angMiddle: endAngle,
             duration: tweenDur,
             ease: 'Quad.easeInOut',
-            onStop: this.tweenEnded
         })
         this.currMiddleVisualTween = this.scene.tweens.add({
             targets: this.jointMiddle,
-            rotation: -2 * inRads,
+            rotation: -2 * endAngle,
             duration: tweenDur,
             ease: 'Quad.easeInOut'
         })
@@ -164,13 +177,12 @@ class GunStrong extends Phaser.GameObjects.Sprite {
             this.currOuterVisualTween.stop();
             this.currOuterVisualTween.destroy();
         }
-        let tweenDur = Math.abs(inRads) / Math.PI * 1000;
+        let tweenDur = this.movementTime/*Math.abs(this.angOuter - inRads) / Math.PI * 1000*/;
         this.currOuterTwistTween = this.scene.tweens.add({
             targets: this,
             angOuter: inRads,
             duration: tweenDur,
             ease: 'Quad.easeInOut',
-            onStop: this.tweenEnded
         })
         this.currOuterVisualTween = this.scene.tweens.add({
             targets: this.jointOuter,
@@ -180,18 +192,17 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         })
     }
 
-    tweenEnded() {
-        console.log("tween finished");
-        return true;
+    storeTargetCoords(x, y) {
+        this.targetX = x;
+        this.targetY = y;
     }
 
-    fire() {
+    fire(targetX, targetY) {
         // store pointers to mouse and gun barrel
-        let pointer = this.scene.input.activePointer;
         let gunBarrel = this.scene.my.sprite.gunStrong.barrel;
 
-        // create hitbox line directly from barrel tip through mouse pointer to screen border
-        let ang = Phaser.Math.Angle.Between(gunBarrel.x, gunBarrel.y, pointer.x, pointer.y)  
+        // create hitbox line directly from barrel tip through target point to screen border
+        let ang = Phaser.Math.Angle.Between(gunBarrel.x, gunBarrel.y, targetX, targetY)  
         var line = Phaser.Geom.Line.SetToAngle(new Phaser.Geom.Line(), 
                                                gunBarrel.x + (0.5 * 62 * Math.cos(ang)),
                                                gunBarrel.y + (0.5 * 62 * Math.sin(ang)),
@@ -234,5 +245,53 @@ class GunStrong extends Phaser.GameObjects.Sprite {
             duration: 5000,
             ease: 'Expo.Out'
         })
+    }
+
+    attack() {
+        let player = this.scene.my.sprite.player;
+        let pointer = this.scene.input.activePointer;
+        if (this.timeline) {
+            this.timeline.stop();
+            this.timeline.destroy();
+        }
+        this.timeline = this.scene.add.timeline([
+            {
+                at: 1000,
+                run() {
+                    this.moveTo(player.positions[player.pos] + ((Math.random() - 0.5) * 200));
+                },
+                target: this
+            },
+            {
+                from: 1000,
+                run() {
+                    this.twistInnerToAngle(Phaser.Math.Angle.Between(this.x, this.y, pointer.x, this.y - 150));
+                },
+                target: this
+            },
+            {
+                from: 1000,
+                run() {
+                    this.twistMiddleToAngle(Phaser.Math.Angle.Between(this.jointMiddle.x, this.jointMiddle.y, pointer.x, this.jointMiddle.y + 30));
+                },
+                target: this
+            },
+            {
+                from: 1000,
+                run() {
+                    this.storeTargetCoords(pointer.x, pointer.y);
+                    this.twistOuterToAngle(Phaser.Math.Angle.Between(this.jointOuter.x, this.jointOuter.y, pointer.x, pointer.y));
+                },
+                target: this
+            },
+            {
+                from: 1000,
+                run() {
+                    this.fire(this.targetX, this.targetY);
+                },
+                target: this
+            }
+        ])
+        this.timeline.play();
     }
 }
