@@ -1,17 +1,21 @@
 class Player extends Phaser.GameObjects.Sprite {
-    constructor(scene, x, y, texture, frame, leftKey, rightKey, shootWeakKey, shootStrongKey, speed, positions) {
+    constructor(scene, x, y, 
+                speed, positions, pos, 
+                texture, frame, 
+                leftKey, rightKey, prepShootStrongKey, shootStrongKey) {
         super(scene, x, y, texture, frame);
 
         this.left = leftKey;
         this.right = rightKey;
 
-        this.shootWeak = shootWeakKey;
+        this.prepShoot = prepShootStrongKey;
         this.shootStrong = shootStrongKey;
-        this.reloaded = true;
+        this.canShootStrong = true;
 
         this.movementSpeed = speed;
         this.positions = positions;
-        this.pos = this.positions.length / 2;
+        this.pos = pos;
+        this.oldPos = pos;
 
         scene.add.existing(this);
         return this;
@@ -20,27 +24,30 @@ class Player extends Phaser.GameObjects.Sprite {
     update() {
 
         // take keyboard inputs
-        if (Phaser.Input.Keyboard.JustDown(this.left)) {
-            this.pos--;
+        if (this.pos > 0 && Phaser.Input.Keyboard.JustDown(this.left)) {
+            this.pos = this.pos - 1;
         }
-        if (Phaser.Input.Keyboard.JustDown(this.right)) {
-            this.pos++;
+        if (this.pos < this.positions.length - 1 && Phaser.Input.Keyboard.JustDown(this.right)) {
+            this.pos = this.pos + 1;
         }
 
         // update movement tween if needed
-        let newPos = positions[pos] - (this.displayWidth / 2);
-        if (this.x != newPos) {
-            for(var tween of this.tweens) {
-                tween.destroy();
+        if (this.oldPos != this.pos) {
+            if (this.currTween) {
+                this.currTween.stop();
+                this.currTween.destroy();
             }
-            let tweenDur = Math.abs(this.x - this.newPos) / this.speed;
-            this.tweens.add({
+            let newPos = this.positions[this.pos];
+            let tweenDur = Math.abs(this.x - newPos) * this.movementSpeed;
+            this.currTween = this.scene.tweens.add({
                 targets: this,
                 x: newPos,
                 y: this.y,
                 duration: tweenDur,
                 ease: 'Quad.easeOut'
-            })
+            });
+            this.oldPos = this.pos;
         }
     }
+
 }

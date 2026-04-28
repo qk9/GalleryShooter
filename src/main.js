@@ -20,8 +20,8 @@ let config = {
         pixelArt: true  // prevent pixel art from getting blurred when scaled
     },
     width: 1100,
-    height: 600,
-    scene: [Intro, GalleryShooter] // TODO: add scenes
+    height: 1000,
+    scene: [GalleryShooter] // TODO: add scenes
 }
 
 const game = new Phaser.Game(config);
