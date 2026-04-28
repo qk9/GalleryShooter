@@ -14,7 +14,7 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         // joint angles
         this.angInner = 2 * Math.PI / -3; // angle of innermost joint
         this.angMiddle = Math.PI / 10; // angle of middle joint
-        this.angOuter = Math.PI / -2; // angle of outermost joint
+        this.angOuter = Math.PI / -3; // angle of outermost joint
 
         // inner arm
         this.armInner = this.scene.add.sprite(this.x + (35 * Math.cos(this.angInner)), this.y + (35 * Math.sin(this.angInner)), armTexture)
@@ -209,12 +209,13 @@ class GunStrong extends Phaser.GameObjects.Sprite {
                                                ang, 1500);
         
         // draw laser graphic based on hitbox line
-        var graphics = this.scene.add.graphics();
-        this.scene.my.sprite.gunStrong.drawStrongLaser(graphics, line.x1, line.y1, line.x2, line.y2, 5);
+        var laserGraphics = this.scene.add.graphics();
+        var shadowGraphics = this.scene.add.graphics();
+        this.scene.my.sprite.gunStrong.drawStrongLaser(laserGraphics, shadowGraphics, line.x1, line.y1, line.x2, line.y2, 5);
         this.scene.children.bringToTop(gunBarrel);
     }
 
-    drawStrongLaser(graphics, x1, y1, x2, y2, steps) {
+    drawStrongLaser(laserGraphics, shadowGraphics, x1, y1, x2, y2, steps) {
         // generate segments
         let ang = Phaser.Math.Angle.Between(x1, y1, x2, y2);
         ang += Math.PI / 2;
@@ -231,19 +232,27 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         }
         
         // draw
-        graphics.lineStyle(60, 0x873918, 1.0);
-        graphics.strokePoints(points, false, false, points.length);
-        graphics.lineStyle(40, 0xAB4D29, 1.0);
-        graphics.strokePoints(points, false, false, points.length);
-        graphics.lineStyle(25, 0xD17152, 1.0);
-        graphics.strokePoints(points, false, false, points.length);
-        graphics.lineStyle(5, 0xffffff, 1.0);
-        graphics.strokePoints(points, false, false, points.length);
-        graphics.scene.tweens.add({
-            targets: graphics,
+        laserGraphics.lineStyle(60, 0x873918, 1.0);
+        laserGraphics.strokePoints(points, false, false, points.length);
+        laserGraphics.lineStyle(40, 0xAB4D29, 1.0);
+        laserGraphics.strokePoints(points, false, false, points.length);
+        laserGraphics.lineStyle(25, 0xD17152, 1.0);
+        laserGraphics.strokePoints(points, false, false, points.length);
+        laserGraphics.lineStyle(5, 0xffffff, 1.0);
+        laserGraphics.strokePoints(points, false, false, points.length);
+        laserGraphics.scene.tweens.add({
+            targets: laserGraphics,
             alpha: 0,
             duration: 5000,
             ease: 'Expo.Out'
+        })
+        shadowGraphics.lineStyle(60, 0x444444, 0.2);
+        shadowGraphics.strokePoints(points, false, false, points.length);
+        shadowGraphics.scene.tweens.add({
+            targets: shadowGraphics,
+            alpha: 0,
+            duration: 30000,
+            ease: 'Quad.Out'
         })
     }
 
