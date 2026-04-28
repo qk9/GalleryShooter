@@ -2,20 +2,16 @@ class Player extends Phaser.GameObjects.Sprite {
     constructor(scene, x, y, 
                 speed, positions, pos, 
                 texture, frame, 
-                leftKey, rightKey, prepShootStrongKey, shootStrongKey) {
+                leftKey, rightKey) {
         super(scene, x, y, texture, frame);
 
         this.left = leftKey;
         this.right = rightKey;
 
-        this.prepShoot = prepShootStrongKey;
-        this.shootStrong = shootStrongKey;
-        this.canShootStrong = true;
-
         this.movementSpeed = speed;
         this.positions = positions;
         this.pos = pos;
-        this.oldPos = pos;
+        this.moved = false;
 
         scene.add.existing(this);
         return this;
@@ -26,13 +22,15 @@ class Player extends Phaser.GameObjects.Sprite {
         // take keyboard inputs
         if (this.pos > 0 && Phaser.Input.Keyboard.JustDown(this.left)) {
             this.pos = this.pos - 1;
+            this.moved = true;
         }
         if (this.pos < this.positions.length - 1 && Phaser.Input.Keyboard.JustDown(this.right)) {
             this.pos = this.pos + 1;
+            this.moved = true;
         }
 
         // update movement tween if needed
-        if (this.oldPos != this.pos) {
+        if (this.moved) {
             if (this.currTween) {
                 this.currTween.stop();
                 this.currTween.destroy();
@@ -46,7 +44,7 @@ class Player extends Phaser.GameObjects.Sprite {
                 duration: tweenDur,
                 ease: 'Quad.easeOut'
             });
-            this.oldPos = this.pos;
+            this.moved = false;
         }
     }
 

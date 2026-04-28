@@ -1,0 +1,76 @@
+class GunWeak extends Phaser.GameObjects.Sprite {
+    constructor(scene, x, y,
+                texture, frame,
+                player) {
+        super(scene, x, y, texture, frame);
+
+        this.player = player;
+        this.setOrigin(0.5, 0.8);
+
+        scene.add.existing(this);
+        return this;
+    }
+
+    update() {
+        // sync position with player
+        if (this.x != this.player.x - 2) {
+            this.x = this.player.x - 2;
+        }
+
+        // point towards mouse
+        let pointer = this.scene.input.activePointer;
+        if (pointer.y < this.scene.sandbagY - 22) {
+            this.angle = Phaser.Math.RadToDeg(Phaser.Math.Angle.Between(this.x, this.y, pointer.x, pointer.y)) + 90;
+        }
+    }
+
+    fire() {
+        // store pointers to mouse and gun barrel
+        let pointer = this.scene.input.activePointer;
+        let gunWeak = this.scene.my.sprite.gunWeak;
+
+        // create hitbox line directly from barrel tip through mouse pointer to screen border
+        let ang = Phaser.Math.Angle.Between(gunWeak.x, gunWeak.y, this.x, this.y)
+        var line = Phaser.Geom.Line.SetToAngle(new Phaser.Geom.Line(), 
+                                               gunWeak.x + (0.75 * 58 * Math.cos(ang)),
+                                               gunWeak.y + (0.75 * 58 * Math.sin(ang)),
+                                               ang, 1500);
+        
+        // draw laser graphic based on hitbox line
+        var graphics = this.scene.add.graphics();
+        gunWeak.drawWeakLaser(graphics, line.x1, line.y1, line.x2, line.y2, 10);
+        this.scene.children.bringToTop(gunWeak);
+    }
+
+    drawWeakLaser(graphics, x1, y1, x2, y2, steps) {
+
+        // generate segments
+        let ang = Phaser.Math.Angle.Between(x1, y1, x2, y2);
+        ang += Math.PI / 2;
+        let x = x1;
+        let y = y1;
+        let points = [{x, y}];
+        for (let i = 1; i <= steps; i++) {
+            let x = (((steps - i) / steps) * x1) + ((i / steps)* x2);
+            let y = (((steps - i) / steps) * y1 + (i / steps) * y2);
+            let offset = Math.random() - 0.5;
+            x += Math.cos(ang) * offset * 50;
+            y += Math.sin(ang) * offset * 50;
+            points.push({x, y});
+        }
+        
+        // draw
+        graphics.lineStyle(20, 0x24738F, 1.0);
+        graphics.strokePoints(points, false, false, points.length);
+        graphics.lineStyle(14, 0x71B8E3, 1.0);
+        graphics.strokePoints(points, false, false, points.length);
+        graphics.lineStyle(4, 0xffffff, 1.0);
+        graphics.strokePoints(points, false, false, points.length);
+        graphics.scene.tweens.add({
+            targets: graphics,
+            alpha: 0,
+            duration: 1000,
+            ease: 'Expo.Out'
+        })
+    }
+}
