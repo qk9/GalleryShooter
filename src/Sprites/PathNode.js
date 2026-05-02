@@ -26,6 +26,12 @@ class PathNode extends Phaser.GameObjects.Sprite {
         this.setTexture(this.scene.textures.get("pathMaybe"));
     }
 
+    hideIfUnsure() {
+        if (this.texture.key != "pathSure") {
+            this.hide();
+        }
+    }
+
     makeMaybe() {
         if (this.texture.key != "pathSure") {
             this.visible = true;

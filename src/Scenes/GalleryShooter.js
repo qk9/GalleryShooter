@@ -103,6 +103,7 @@ class GalleryShooter extends Phaser.Scene {
             this.path.sprites.push(column);
             for(let j = 0; j < this.pathRows; j++) {
                 this.path.sprites[i].push(new PathNode(this, i, j, "pathMaybe", null));
+                this.path.sprites[i][j].hide();
             }
         }
 
@@ -129,27 +130,56 @@ class GalleryShooter extends Phaser.Scene {
         
         // create enemy prototype(s)
         this.enemies = [];
+        this.testEnemy = new Enemy(this, 3, 5, 2, "enemyBody", null);
+        this.testEnemy.move();
 
-        // test path node storage
-        /*this.currSprite = this.path.sprites[10][3];
-        var testPathTimer = this.time.addEvent({
-            delay: 100,
+        // test showPossibleMoves loop
+        var testPathDrawTimer = this.time.addEvent({
+            delay: 1000,
             callback: () => {
-                this.currSprite.makeSure();
-                if (this.currSprite.getConnections().leftDown) {
-                    this.currSprite = this.currSprite.getConnections().leftDown;
+                let movesFull = true;
+                let justReset = false;
+                let moveToAdd = "right";
+                for(let move of this.testEnemy.moves) {
+                    if (move != moveToAdd) {
+                        movesFull = false;
+                    }
                 }
+                if (movesFull) {
+                    this.testEnemy.resetMoves();
+                    justReset = true;
+                }
+                if (justReset) {
+                    this.testEnemy.xIndex++;
+                    justReset = false;
+                }
+                else {
+                    this.testEnemy.addMove(moveToAdd);
+                }
+                for (let nodeArray of this.path.sprites) {
+                    for(let node of nodeArray) {
+                        node.hide();
+                    }
+                }
+                this.testEnemy.showPossibleMoves(3);
             },
             loop: true
-        })*/
+        })
     }
 
     update(time, delta) {
         this.my.sprite.player.update();
         this.my.sprite.gunWeak.update();
         this.my.sprite.gunStrong.update();
+        /*for (let nodeArray of this.path.sprites) {
+            for(let node of nodeArray) {
+                node.hide();
+            }
+        }
         for(let enemy of this.enemies) {
             enemy.update(time, delta);
-        }
+        }*/
+
+        this.testEnemy.update();
     }
 }
