@@ -2,32 +2,63 @@ class GalleryShooter extends Phaser.Scene {
     constructor() {
         super("galleryShooter");
         this.my = {sprite: {}};
+        this.path = {sprites: []};
+
+        let gameWidth = game.config.width - 100;
 
         this.playerY = game.config.height - 150;
         this.playerSpeed = 1;
-        this.positions = [50, game.config.width / 4, game.config.width / 2, game.config.width * 3 / 4, game.config.width - 50];
+        this.positions = [
+                          50, 
+                          gameWidth / 4, 
+                          gameWidth / 2,
+                          gameWidth * 3 / 4,
+                          gameWidth
+                         ];
 
         this.sandbagY = this.playerY - 80;
 
+        // constants for path node loading
+        this.pathColumns = 15;
+        this.pathRows = 10;
+        this.pathHorizLeftBuffer = 50;
+        this.pathHorizSpacing = (game.config.width - (2 * this.pathHorizLeftBuffer)) / (this.pathColumns - 1);
+        this.pathVertTopBuffer = 10;
+        this.pathVertSpacing = (this.sandbagY - this.pathVertTopBuffer) / this.pathRows;
+
         this.gunStrongX = game.config.width / 2;
         this.gunStrongY = game.config.height;
+
+        this.prototypes = {sprite: {}};
     }
     
     preload() {
         this.load.setPath("./assets/")
 
+        // player's tank
         this.load.image("playerBody", "Tanks/tankRed.png");
         this.load.image("playerGun", "Tanks/barrelRed_outline.png");
 
+        // parts of strong gun
         this.load.image("gunStrongArm", "Tanks/barrelBlack_outline.png");
         this.load.image("gunStrongJoint", "Obstacles/oil.png");
         this.load.image("gunStrongBarrel", "Obstacles/barrelGrey_side.png");
 
+        // enemy tanks
+        this.load.image("enemyBody", "Tanks/tankBeige.png");
+        this.load.image("enemyGun", "Tanks/barrelBeige_outline.png")
+
+        // player's fortress
         this.load.image("sandbag", "Obstacles/sandbagBeige.png");
         this.load.image("tracks", "Tanks/tracksSmall.png");
 
+        // background
         this.load.image("sand", "Environment/sand.png");
         this.load.image("dirt", "Environment/dirt.png");
+
+        // enemy pathway nodes
+        this.load.image("pathMaybe", "Smoke/smokeYellow1.png");
+        this.load.image("pathSure", "Smoke/smokeOrange1.png");
     }
 
     create() {
@@ -66,12 +97,21 @@ class GalleryShooter extends Phaser.Scene {
             currX += 114;
         }
 
+        // create pathway nodes
+        for (let i = 0; i < this.pathColumns; i++) {
+            let column = [];
+            this.path.sprites.push(column);
+            for(let j = 0; j < this.pathRows; j++) {
+                this.path.sprites[i].push(new PathNode(this, i, j, "pathMaybe", null));
+            }
+        }
+
         // create player
         this.my.sprite.player = new Player(this, 
-                                      this.positions[2], this.playerY, 
-                                      this.playerSpeed, this.positions, 2,
-                                      "playerBody", null, 
-                                      this.leftKey, this.rightKey);
+                                           this.positions[2], this.playerY, 
+                                           this.playerSpeed, this.positions, 2,
+                                           "playerBody", null, 
+                                           this.leftKey, this.rightKey);
         this.my.sprite.player.angle = 90;
 
         this.my.sprite.gunWeak = new GunWeak(this, 
@@ -87,11 +127,29 @@ class GalleryShooter extends Phaser.Scene {
         
         this.input.on('pointerdown', this.my.sprite.gunWeak.fire);
         
+        // create enemy prototype(s)
+        this.enemies = [];
+
+        // test path node storage
+        /*this.currSprite = this.path.sprites[10][3];
+        var testPathTimer = this.time.addEvent({
+            delay: 100,
+            callback: () => {
+                this.currSprite.makeSure();
+                if (this.currSprite.getConnections().leftDown) {
+                    this.currSprite = this.currSprite.getConnections().leftDown;
+                }
+            },
+            loop: true
+        })*/
     }
 
-    update() {
+    update(time, delta) {
         this.my.sprite.player.update();
         this.my.sprite.gunWeak.update();
         this.my.sprite.gunStrong.update();
+        for(let enemy of this.enemies) {
+            enemy.update(time, delta);
+        }
     }
 }
