@@ -29,6 +29,12 @@ class GalleryShooter extends Phaser.Scene {
         this.gunStrongX = game.config.width / 2;
         this.gunStrongY = game.config.height;
 
+        this.enemyIndex = 0;
+
+        this.enemySpeed = 200;
+
+        this.enemyCycleTime = 1000 + 3 * this.enemySpeed;
+
         this.prototypes = {sprite: {}};
     }
     
@@ -103,7 +109,7 @@ class GalleryShooter extends Phaser.Scene {
             this.path.sprites.push(column);
             for(let j = 0; j < this.pathRows; j++) {
                 this.path.sprites[i].push(new PathNode(this, i, j, "pathMaybe", null));
-                this.path.sprites[i][j].hide();
+                this.path.sprites[i][j].makeMaybe();
             }
         }
 
@@ -128,13 +134,47 @@ class GalleryShooter extends Phaser.Scene {
         
         this.input.on('pointerdown', this.my.sprite.gunWeak.fire);
         
-        // create enemy prototype(s)
+        // create enemy storage
+
+        // enemies stored by current column for projectile collision detection
         this.enemies = [];
-        this.testEnemy = new Enemy(this, 3, 5, 2, "enemyBody", null);
-        this.testEnemy.move();
+        for (let i = 0; i < this.pathColumns; i++) {
+            this.enemies.push({});
+        }
+
+        // enemy movement timeline
+        this.moveTimeline = this.add.timeline([
+            {
+                at: this.enemyCycleTime / 2,
+                run() {
+                    for(let column of this.scene.enemies) {
+                        for (let enemy in column) {
+                            if (column[enemy].moving && !Object.hasOwn(column[enemy], "moveChain")) {
+                                column[enemy].move();
+                            }
+                        }
+                    }
+                }
+            },
+            { // for testing
+                from: this.enemyCycleTime / 2,
+                run() {
+                    this.scene.summonEnemyInColumn(Math.floor(Math.random() * this.scene.pathColumns))
+                }
+            }
+        ]);
+        this.moveTimeline.play();
+
+        //this.testEnemy = this.summonEnemyInColumn(4);
+        //this.summonEnemyInColumn(2);
+        //this.summonEnemyInColumn(6);
+        //this.testEnemy.move();
+        //this.testEnemy.moves = ["right", "right", "any"];
+        //this.testEnemy.showPossibleMoves();
+        //this.testEnemy.move();
 
         // test showPossibleMoves loop
-        var testPathDrawTimer = this.time.addEvent({
+        /*var testPathDrawTimer = this.time.addEvent({
             delay: 1000,
             callback: () => {
                 let movesFull = true;
@@ -164,22 +204,35 @@ class GalleryShooter extends Phaser.Scene {
                 this.testEnemy.showPossibleMoves(3);
             },
             loop: true
-        })
+        })*/
     }
 
     update(time, delta) {
         this.my.sprite.player.update();
         this.my.sprite.gunWeak.update();
         this.my.sprite.gunStrong.update();
-        /*for (let nodeArray of this.path.sprites) {
+        for(let column of this.enemies) {
+            for (let enemy in column) {
+                column[enemy].update();
+            }
+        }
+        if (this.moveTimeline.complete) {
+            this.moveTimeline.play(true);
+        }
+        //console.log("xIndex: ", this.testEnemy.xIndex, "yIndex: ", this.testEnemy.yIndex, "moveIndex: ", this.testEnemy.moveIndex);
+    }
+
+    // summon an enemy at the top of the given column.
+    summonEnemyInColumn(col) {
+        this.enemies[col][this.enemyIndex.toString()] = new Enemy(this, col, 0, this.enemySpeed, "enemyBody", null, this.enemyIndex);
+        return this.enemies[col][(this.enemyIndex - 1).toString()];
+    }
+
+    clearPathNodes() {
+        for (let nodeArray of this.path.sprites) {
             for(let node of nodeArray) {
                 node.hide();
             }
         }
-        for(let enemy of this.enemies) {
-            enemy.update(time, delta);
-        }*/
-
-        this.testEnemy.update();
     }
 }

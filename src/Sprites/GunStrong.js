@@ -56,10 +56,6 @@ class GunStrong extends Phaser.GameObjects.Sprite {
 
     update() {
         // listen for inputs
-        if (Phaser.Input.Keyboard.JustDown(this.mKey)) {
-            this.move();
-        }
-
         if(Phaser.Input.Keyboard.JustDown(this.fireKey)) {
             this.attack();
         }
@@ -82,10 +78,6 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         this.barrel.x = this.jointOuter.x + (45 * Math.cos(this.angOuter));
         this.barrel.y = this.jointOuter.y + (45 * Math.sin(this.angOuter));
         this.barrel.setRotation(this.angOuter + (Math.PI / 2));
-    }
-
-    move() {
-        this.moveTo(this.scene.my.sprite.player.pos);
     }
 
     moveTo(x) {
@@ -208,11 +200,29 @@ class GunStrong extends Phaser.GameObjects.Sprite {
                                                gunBarrel.y + (0.5 * 62 * Math.sin(ang)),
                                                ang, 1500);
         
+        this.handleCollisionChecks(line);
         // draw laser graphic based on hitbox line
         var laserGraphics = this.scene.add.graphics();
         var shadowGraphics = this.scene.add.graphics();
         this.scene.my.sprite.gunStrong.drawStrongLaser(laserGraphics, shadowGraphics, line.x1, line.y1, line.x2, line.y2, 5);
         this.scene.children.bringToTop(gunBarrel);
+    }
+
+    handleCollisionChecks(line) {
+        // check for enemy collision
+        let highCoord = Math.max(line.x1, line.x2);
+        let lowCoord = Math.min(line.x1, line.x2);
+        let lowIndex = Math.max(Math.round((lowCoord - this.scene.pathHorizLeftBuffer) / this.scene.pathHorizSpacing), 0);
+        let highIndex = Math.min(Math.round((highCoord - this.scene.pathHorizLeftBuffer) / this.scene.pathHorizSpacing), this.scene.pathColumns - 1);
+        for (lowIndex; lowIndex <= highIndex; lowIndex++) {
+            let currList = this.scene.enemies[lowIndex];
+            for (let enemy in currList) {
+                let currEnemy = currList[enemy];
+                if (Phaser.Geom.Intersects.LineToRectangle(line, currEnemy.hurtbox)) {
+                    currEnemy.kill();
+                }
+            }
+        }
     }
 
     drawStrongLaser(laserGraphics, shadowGraphics, x1, y1, x2, y2, steps) {

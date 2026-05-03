@@ -30,16 +30,40 @@ class GunWeak extends Phaser.GameObjects.Sprite {
         let gunWeak = this.scene.my.sprite.gunWeak;
 
         // create hitbox line directly from barrel tip through mouse pointer to screen border
-        let ang = Phaser.Math.Angle.Between(gunWeak.x, gunWeak.y, this.x, this.y)
+        let ang = Phaser.Math.Angle.Between(gunWeak.x, gunWeak.y, this.x, this.y) // "this" will be active pointer, should change later
         var line = Phaser.Geom.Line.SetToAngle(new Phaser.Geom.Line(), 
                                                gunWeak.x + (0.75 * 58 * Math.cos(ang)),
                                                gunWeak.y + (0.75 * 58 * Math.sin(ang)),
-                                               ang, 1500);
+                                               ang, 1000);
         
+        this.handleCollisionChecks(line);
+
         // draw laser graphic based on hitbox line
         var graphics = this.scene.add.graphics();
         gunWeak.drawWeakLaser(graphics, line.x1, line.y1, line.x2, line.y2, 10);
         this.scene.children.bringToTop(gunWeak);
+    }
+
+    handleCollisionChecks(line) {
+        // check for enemy collision
+        let highCoord = Math.max(line.x1, line.x2);
+        let lowCoord = Math.min(line.x1, line.x2);
+        let lowIndex = Math.max(Math.round((lowCoord - this.scene.pathHorizLeftBuffer) / this.scene.pathHorizSpacing), 0);
+        let highIndex = Math.min(Math.round((highCoord - this.scene.pathHorizLeftBuffer) / this.scene.pathHorizSpacing), this.scene.pathColumns - 1);
+        console.log(lowIndex, highIndex);
+        for (lowIndex; lowIndex <= highIndex; lowIndex++) {
+            let currList = this.scene.enemies[lowIndex];
+            for (let enemy in currList) {
+                let currEnemy = currList[enemy];
+                if (Phaser.Geom.Intersects.LineToLine(line, currEnemy.leftLine) && currEnemy.getMoveSum() < this.scene.path.sprites.length - 1) {
+                    currEnemy.addMove("right");
+                }
+                else if (Phaser.Geom.Intersects.LineToLine(line, currEnemy.rightLine) && currEnemy.getMoveSum() > 0) {
+                    currEnemy.addMove("left");
+                }
+                console.log(currEnemy.moves);
+            }
+        }
     }
 
     drawWeakLaser(graphics, x1, y1, x2, y2, steps) {
