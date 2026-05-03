@@ -184,7 +184,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
     getValidMove(index) {
         let validMoves = [];
-        let moveNames = [];
+        //let moveNames = [];
         let dirs = ["leftUp", "leftDown", "down", "rightDown", "rightUp", "up"];
         let connections = this.scene.path.sprites[this.xIndex][this.yIndex].getConnections();
         let lowIndex = -1;
@@ -216,13 +216,13 @@ class Enemy extends Phaser.GameObjects.Sprite {
         for (let i = lowIndex; i <= highIndex; i++) {
             if (connections[dirs[i]]) {
                 validMoves.push(connections[dirs[i]]);
-                moveNames.push(dirs[i]);
+                //moveNames.push(dirs[i]);
             }
         }
         if (validMoves.length == 0) {
             console.log("No valid moves!");
         }
-        else {
+        /*else {
             let log = "";
             for (let name of moveNames) {
                 log += name + ", ";
@@ -230,18 +230,19 @@ class Enemy extends Phaser.GameObjects.Sprite {
             console.log(log);
         }
         let finalMoveIndex = Math.floor(Math.random() * validMoves.length);
-        console.log("moving", moveNames[finalMoveIndex]);
-        return validMoves[finalMoveIndex/*Math.floor(Math.random() * validMoves.length)*/];
+        console.log("moving", moveNames[finalMoveIndex]);*/
+        return validMoves[/*finalMoveIndex*/Math.floor(Math.random() * validMoves.length)];
     }
 
     // move cycle takes (this.speed * 3) frames to execute.
     move() {
         if (this.moveIndex >= this.moves.length) {
-            console.log("move cycle finished");
+            //console.log("move cycle finished");
             this.moveIndex = 0;
             this.resetMoves();
             return;
         }
+        this.showPossibleMoves();
 
         let node = this.getValidMove(this.moveIndex);
 
@@ -267,7 +268,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
             ],
             callbackScope: this,
             onComplete: () => {
-                this.move()
+                this.move();
             }
         });
 
@@ -283,6 +284,12 @@ class Enemy extends Phaser.GameObjects.Sprite {
     }
 
     kill() {
+        console.log("killing enemy");
+        if (Object.hasOwn(this, "moveChain")) {
+            this.moveChain.stop();
+            this.moveChain.destroy();
+        }
+        console.log("still killing enemy");
         delete this.scene.enemies[this.xIndex][this.sceneIndex.toString()];
         this.graphics.destroy();
         this.destroy();

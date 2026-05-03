@@ -58,6 +58,7 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         // listen for inputs
         if(Phaser.Input.Keyboard.JustDown(this.fireKey)) {
             this.attack();
+            //this.fire(this.scene.input.activePointer.x, this.scene.input.activePointer.y); 
         }
 
         // adjust arms and joints to correct positions

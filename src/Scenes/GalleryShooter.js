@@ -109,7 +109,7 @@ class GalleryShooter extends Phaser.Scene {
             this.path.sprites.push(column);
             for(let j = 0; j < this.pathRows; j++) {
                 this.path.sprites[i].push(new PathNode(this, i, j, "pathMaybe", null));
-                this.path.sprites[i][j].makeMaybe();
+                this.path.sprites[i][j].hide();
             }
         }
 
@@ -156,8 +156,26 @@ class GalleryShooter extends Phaser.Scene {
                     }
                 }
             },
+            {
+                from: this.enemySpeed - 20,
+                run() {
+                    this.scene.clearPathNodes();
+                }
+            },
+            {
+                from: this.enemySpeed,
+                run() {
+                    this.scene.clearPathNodes();
+                }
+            },
+            {
+                from: this.enemySpeed,
+                run() {
+                    this.scene.clearPathNodes();
+                }
+            },
             { // for testing
-                from: this.enemyCycleTime / 2,
+                at: this.enemyCycleTime,
                 run() {
                     this.scene.summonEnemyInColumn(Math.floor(Math.random() * this.scene.pathColumns))
                 }

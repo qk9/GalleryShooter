@@ -36,7 +36,7 @@ class GunWeak extends Phaser.GameObjects.Sprite {
                                                gunWeak.y + (0.75 * 58 * Math.sin(ang)),
                                                ang, 1000);
         
-        this.handleCollisionChecks(line);
+        gunWeak.handleCollisionChecks(line);
 
         // draw laser graphic based on hitbox line
         var graphics = this.scene.add.graphics();
