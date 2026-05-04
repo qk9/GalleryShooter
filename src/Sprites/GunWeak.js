@@ -34,7 +34,7 @@ class GunWeak extends Phaser.GameObjects.Sprite {
         var line = Phaser.Geom.Line.SetToAngle(new Phaser.Geom.Line(), 
                                                gunWeak.x + (0.75 * 58 * Math.cos(ang)),
                                                gunWeak.y + (0.75 * 58 * Math.sin(ang)),
-                                               ang, 1000);
+                                               ang, 1310);
         
         gunWeak.handleCollisionChecks(line);
 
@@ -50,18 +50,18 @@ class GunWeak extends Phaser.GameObjects.Sprite {
         let lowCoord = Math.min(line.x1, line.x2);
         let lowIndex = Math.max(Math.round((lowCoord - this.scene.pathHorizLeftBuffer) / this.scene.pathHorizSpacing), 0);
         let highIndex = Math.min(Math.round((highCoord - this.scene.pathHorizLeftBuffer) / this.scene.pathHorizSpacing), this.scene.pathColumns - 1);
-        console.log(lowIndex, highIndex);
         for (lowIndex; lowIndex <= highIndex; lowIndex++) {
             let currList = this.scene.enemies[lowIndex];
             for (let enemy in currList) {
                 let currEnemy = currList[enemy];
                 if (Phaser.Geom.Intersects.LineToLine(line, currEnemy.leftLine) && currEnemy.getMoveSum() < this.scene.path.sprites.length - 1) {
+                    console.log(currEnemy.getMoveSum());
                     currEnemy.addMove("right");
                 }
                 else if (Phaser.Geom.Intersects.LineToLine(line, currEnemy.rightLine) && currEnemy.getMoveSum() > 0) {
+                    console.log(currEnemy.getMoveSum());
                     currEnemy.addMove("left");
                 }
-                console.log(currEnemy.moves);
             }
         }
     }

@@ -1,6 +1,7 @@
 class Player extends Phaser.GameObjects.Sprite {
     constructor(scene, x, y, 
                 speed, positions, pos, 
+                health,
                 texture, frame, 
                 leftKey, rightKey) {
         super(scene, x, y, texture, frame);
@@ -12,6 +13,12 @@ class Player extends Phaser.GameObjects.Sprite {
         this.positions = positions;
         this.pos = pos;
         this.moved = false;
+
+        this.health = health;
+        this.hurtbox = new Phaser.Geom.Rectangle.FromXY(this.x - this.displayWidth / 2,
+                                                        this.y - this.displayHeight / 2,
+                                                        this.x + this.displayWidth / 2,
+                                                        this.y + this.displayHeight / 2);
 
         scene.add.existing(this);
         return this;
@@ -28,6 +35,12 @@ class Player extends Phaser.GameObjects.Sprite {
             this.pos = this.pos + 1;
             this.moved = true;
         }
+
+        // move hurtbox
+        this.hurtbox.left = this.x - this.displayWidth / 2;
+        this.hurtbox.right = this.x + this.displayWidth / 2;
+        this.hurtbox.top = this.y - this.displayHeight / 2;
+        this.hurtbox.bottom = this.y + this.displayHeight / 2;
 
         // update movement tween if needed
         if (this.moved) {
@@ -46,6 +59,7 @@ class Player extends Phaser.GameObjects.Sprite {
             });
             this.moved = false;
         }
+        console.log(this.health);
     }
 
 }

@@ -25,10 +25,10 @@ class Enemy extends Phaser.GameObjects.Sprite {
                                              this.x - this.displayWidth / 2 - 50, this.y);
         this.rightLine = new Phaser.Geom.Line(this.x + this.displayWidth / 2, this.y,
                                               this.x + this.displayWidth / 2 + 50, this.y);
-        this.hurtbox = new Phaser.Geom.Rectangle.FromXY(this.x - this.displayWidth / 2 - 10,
-                                                        this.y - this.displayHeight / 2 - 10,
-                                                        this.x + this.displayWidth / 2 + 10,
-                                                        this.y + this.displayHeight / 2 + 10);
+        this.hurtbox = new Phaser.Geom.Rectangle.FromXY(this.x - this.displayWidth / 2 - 20,
+                                                        this.y - this.displayHeight / 2 - 20,
+                                                        this.x + this.displayWidth / 2 + 20,
+                                                        this.y + this.displayHeight / 2 + 20);
 
         // temp
         this.graphics = this.scene.add.graphics();
@@ -36,6 +36,8 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
         this.setScale(0.5, 0.5);
         this.rotation = Math.PI;
+
+        this.weapon = null;
 
         this.startTween = this.scene.tweens.add({
             targets: this,
@@ -53,6 +55,10 @@ class Enemy extends Phaser.GameObjects.Sprite {
         
         scene.add.existing(this);
         return this;
+    }
+
+    setWeapon(weapon) {
+        this.weapon = weapon;
     }
 
     update() {
@@ -76,10 +82,14 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.graphics.strokeLineShape(this.rightLine);*/
 
         // move hurtbox
-        this.hurtbox.left = this.x - this.displayWidth / 2 - 10;
-        this.hurtbox.right = this.x + this.displayWidth / 2 + 10;
-        this.hurtbox.top = this.y - this.displayHeight / 2 - 10;
-        this.hurtbox.bottom = this.y + this.displayHeight / 2 + 10;
+        this.hurtbox.left = this.x - this.displayWidth / 2 - 20;
+        this.hurtbox.right = this.x + this.displayWidth / 2 + 20;
+        this.hurtbox.top = this.y - this.displayHeight / 2 - 20;
+        this.hurtbox.bottom = this.y + this.displayHeight / 2 + 20;
+
+        if (this.weapon != null) {
+            this.weapon.update();
+        }
     }
 
     addToMoveCycle() {
@@ -88,7 +98,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
     getMoveSum() {
         let sum = this.xIndex;
-        for (let move in this.moves) {
+        for (let move of this.moves) {
             if (move == "left") {
                 sum--;
             }
@@ -102,6 +112,16 @@ class Enemy extends Phaser.GameObjects.Sprite {
     addMove(dir) {
         this.moves.shift();
         this.moves.push(dir);
+    }
+
+    knowsDestination() {
+        let flag = true;
+        for (let move of this.moves) {
+            if (move == "any") {
+                flag = false;
+            }
+        }
+        return flag;
     }
 
     resetMoves() {
@@ -238,8 +258,14 @@ class Enemy extends Phaser.GameObjects.Sprite {
     move() {
         if (this.moveIndex >= this.moves.length) {
             //console.log("move cycle finished");
+            this.weapon.attack(Math.min(Math.max(this.scene.my.sprite.player.pos + Math.floor(Math.random() * 3) - 1, 0), this.scene.my.sprite.player.positions.length - 1));
             this.moveIndex = 0;
             this.resetMoves();
+            return;
+        }
+        if (this.yIndex == this.scene.path.sprites[0].length - 1 && this.xIndex % 2 == 0) {
+            this.moving = false;
+            this.atBottom();
             return;
         }
         this.showPossibleMoves();
@@ -283,15 +309,19 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.xIndex = newIndex;
     }
 
+    atBottom() {
+        this.scene.my.sprite.player.health -= 10;
+        this.kill();
+    }
+
     kill() {
-        console.log("killing enemy");
         if (Object.hasOwn(this, "moveChain")) {
             this.moveChain.stop();
             this.moveChain.destroy();
         }
-        console.log("still killing enemy");
         delete this.scene.enemies[this.xIndex][this.sceneIndex.toString()];
         this.graphics.destroy();
+        this.weapon.destroy();
         this.destroy();
     }
 }

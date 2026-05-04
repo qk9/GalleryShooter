@@ -1,11 +1,12 @@
 class GunStrong extends Phaser.GameObjects.Sprite {
-    constructor(scene, x, y, positions, jointTexture, armTexture, barrelTexture, frame, mKey, fireKey) {
+    constructor(scene, x, y, positions, jointTexture, armTexture, barrelTexture, frame, fireKey, cooldown) {
         super(scene, x, y, jointTexture, frame);
         this.positions = positions;
         this.pos = 2;
         this.movementTime = 800;
-        this.mKey = mKey;
         this.fireKey = fireKey;
+        this.cooldown = cooldown;
+        this.canFire = true;
 
         // innermost joint
         this.setRotation(Math.PI / -2);
@@ -203,9 +204,9 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         
         this.handleCollisionChecks(line);
         // draw laser graphic based on hitbox line
-        var laserGraphics = this.scene.add.graphics();
-        var shadowGraphics = this.scene.add.graphics();
-        this.scene.my.sprite.gunStrong.drawStrongLaser(laserGraphics, shadowGraphics, line.x1, line.y1, line.x2, line.y2, 5);
+        this.laserGraphics = this.scene.add.graphics();
+        this.shadowGraphics = this.scene.add.graphics();
+        this.scene.my.sprite.gunStrong.drawStrongLaser(this.laserGraphics, this.shadowGraphics, line.x1, line.y1, line.x2, line.y2, 5);
         this.scene.children.bringToTop(gunBarrel);
     }
 
@@ -267,13 +268,47 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         })
     }
 
+    drawTarget(targetX, targetY) {
+        // draw target circle
+        let circle = new Phaser.Geom.Circle(targetX, targetY, 20);
+        let line1 = Phaser.Geom.Line.SetToAngle(new Phaser.Geom.Line, targetX + (circle.radius / 3), targetY + (circle.radius / 3), Math.PI / 4, circle.radius)
+        let line2 = Phaser.Geom.Line.SetToAngle(new Phaser.Geom.Line, targetX - (circle.radius / 3), targetY + (circle.radius / 3), 3 * Math.PI / 4, circle.radius)
+        let line3 = Phaser.Geom.Line.SetToAngle(new Phaser.Geom.Line, targetX + (circle.radius / 3), targetY - (circle.radius / 3), Math.PI / -4, circle.radius)
+        let line4 = Phaser.Geom.Line.SetToAngle(new Phaser.Geom.Line, targetX - (circle.radius / 3), targetY - (circle.radius / 3), 3 * Math.PI / -4, circle.radius)
+        this.targetGeom.lineStyle(6, 0x000000, 0.5)
+        this.targetGeom.strokeCircleShape(circle);
+        this.targetGeom.strokeLineShape(line1);
+        this.targetGeom.strokeLineShape(line2);
+        this.targetGeom.strokeLineShape(line3);
+        this.targetGeom.strokeLineShape(line4);
+        this.targetGeom.lineStyle(4, 0xcc3333, 1)
+        this.targetGeom.strokeCircleShape(circle);
+        this.targetGeom.strokeLineShape(line1);
+        this.targetGeom.strokeLineShape(line2);
+        this.targetGeom.strokeLineShape(line3);
+        this.targetGeom.strokeLineShape(line4);
+    }
+
     attack() {
+        if (!this.canFire) {
+            return;
+        }
+        this.canFire = false;
         let player = this.scene.my.sprite.player;
         let pointer = this.scene.input.activePointer;
         if (this.timeline) {
             this.timeline.stop();
             this.timeline.destroy();
         }
+        if (!Object.hasOwn(this, "targetGeom")) {
+            this.targetGeom = this.scene.add.graphics();
+        }
+
+        this.storeTargetCoords(pointer.x, pointer.y);
+
+        // draw target circle
+        this.drawTarget(this.targetX, this.targetY);
+
         this.timeline = this.scene.add.timeline([
             {
                 at: 1000,
@@ -285,22 +320,21 @@ class GunStrong extends Phaser.GameObjects.Sprite {
             {
                 from: 1000,
                 run() {
-                    this.twistInnerToAngle(Phaser.Math.Angle.Between(this.x, this.y, pointer.x, this.y - 150));
+                    this.twistInnerToAngle(Phaser.Math.Angle.Between(this.x, this.y, this.targetX, this.y - 150));
                 },
                 target: this
             },
             {
                 from: 1000,
                 run() {
-                    this.twistMiddleToAngle(Phaser.Math.Angle.Between(this.jointMiddle.x, this.jointMiddle.y, pointer.x, this.jointMiddle.y + 30));
+                    this.twistMiddleToAngle(Phaser.Math.Angle.Between(this.jointMiddle.x, this.jointMiddle.y, this.targetX, this.jointMiddle.y + 30));
                 },
                 target: this
             },
             {
                 from: 1000,
                 run() {
-                    this.storeTargetCoords(pointer.x, pointer.y);
-                    this.twistOuterToAngle(Phaser.Math.Angle.Between(this.jointOuter.x, this.jointOuter.y, pointer.x, pointer.y));
+                    this.twistOuterToAngle(Phaser.Math.Angle.Between(this.jointOuter.x, this.jointOuter.y, this.targetX, this.targetY));
                 },
                 target: this
             },
@@ -308,6 +342,14 @@ class GunStrong extends Phaser.GameObjects.Sprite {
                 from: 1000,
                 run() {
                     this.fire(this.targetX, this.targetY);
+                    this.targetGeom.clear();
+                },
+                target: this
+            },
+            {
+                from: this.cooldown,
+                run() {
+                    this.canFire = true;
                 },
                 target: this
             }

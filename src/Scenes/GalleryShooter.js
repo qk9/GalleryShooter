@@ -1,41 +1,6 @@
 class GalleryShooter extends Phaser.Scene {
     constructor() {
         super("galleryShooter");
-        this.my = {sprite: {}};
-        this.path = {sprites: []};
-
-        let gameWidth = game.config.width - 100;
-
-        this.playerY = game.config.height - 150;
-        this.playerSpeed = 1;
-        this.positions = [
-                          50, 
-                          gameWidth / 4, 
-                          gameWidth / 2,
-                          gameWidth * 3 / 4,
-                          gameWidth
-                         ];
-
-        this.sandbagY = this.playerY - 80;
-
-        // constants for path node loading
-        this.pathColumns = 15;
-        this.pathRows = 10;
-        this.pathHorizLeftBuffer = 50;
-        this.pathHorizSpacing = (game.config.width - (2 * this.pathHorizLeftBuffer)) / (this.pathColumns - 1);
-        this.pathVertTopBuffer = 10;
-        this.pathVertSpacing = (this.sandbagY - this.pathVertTopBuffer) / this.pathRows;
-
-        this.gunStrongX = game.config.width / 2;
-        this.gunStrongY = game.config.height;
-
-        this.enemyIndex = 0;
-
-        this.enemySpeed = 200;
-
-        this.enemyCycleTime = 1000 + 3 * this.enemySpeed;
-
-        this.prototypes = {sprite: {}};
     }
     
     preload() {
@@ -68,6 +33,46 @@ class GalleryShooter extends Phaser.Scene {
     }
 
     create() {
+
+        // set constants
+        
+        this.my = {sprite: {}};
+        this.path = {sprites: []};
+
+        let gameWidth = game.config.width - 100;
+
+        this.playerY = game.config.height - 150;
+        this.playerSpeed = 1;
+        this.playerHealth = 100;
+        this.positions = [
+                          50, 
+                          gameWidth / 4, 
+                          gameWidth / 2,
+                          gameWidth * 3 / 4,
+                          gameWidth
+                         ];
+
+        this.sandbagY = this.playerY - 80;
+
+        // constants for path node loading
+        this.pathColumns = 15;
+        this.pathRows = 10;
+        this.pathHorizLeftBuffer = 50;
+        this.pathHorizSpacing = (game.config.width - (2 * this.pathHorizLeftBuffer)) / (this.pathColumns - 1);
+        this.pathVertTopBuffer = 10;
+        this.pathVertSpacing = (this.sandbagY - this.pathVertTopBuffer) / this.pathRows;
+
+        this.gunStrongX = game.config.width / 2;
+        this.gunStrongY = game.config.height;
+        this.gunStrongCooldown = 4000;
+
+        this.enemyIndex = 0;
+
+        this.enemySpeed = 1000;
+
+        this.enemyCycleTime = 4000 + 3 * this.enemySpeed;
+
+        this.prototypes = {sprite: {}};
 
         // create keybinds
         this.leftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
@@ -117,6 +122,7 @@ class GalleryShooter extends Phaser.Scene {
         this.my.sprite.player = new Player(this, 
                                            this.positions[2], this.playerY, 
                                            this.playerSpeed, this.positions, 2,
+                                           this.playerHealth,
                                            "playerBody", null, 
                                            this.leftKey, this.rightKey);
         this.my.sprite.player.angle = 90;
@@ -130,7 +136,7 @@ class GalleryShooter extends Phaser.Scene {
                                                  this.gunStrongX, this.gunStrongY,
                                                  this.positions,
                                                  "gunStrongJoint", "gunStrongArm", "gunStrongBarrel", null,
-                                                this.mKey, this.shootStrongKey);
+                                                 this.shootStrongKey, this.gunStrongCooldown);
         
         this.input.on('pointerdown', this.my.sprite.gunWeak.fire);
         
@@ -182,6 +188,9 @@ class GalleryShooter extends Phaser.Scene {
             }
         ]);
         this.moveTimeline.play();
+
+        // ui
+        this.healthText = this.add.text(10, game.config.height - 10 - 32, "Health: " + this.playerHealth, {fontSize: 32, strokeThickness: 3});
 
         //this.testEnemy = this.summonEnemyInColumn(4);
         //this.summonEnemyInColumn(2);
@@ -237,12 +246,17 @@ class GalleryShooter extends Phaser.Scene {
         if (this.moveTimeline.complete) {
             this.moveTimeline.play(true);
         }
+        this.healthText.text = "Health: " + this.my.sprite.player.health;
         //console.log("xIndex: ", this.testEnemy.xIndex, "yIndex: ", this.testEnemy.yIndex, "moveIndex: ", this.testEnemy.moveIndex);
     }
 
     // summon an enemy at the top of the given column.
     summonEnemyInColumn(col) {
         this.enemies[col][this.enemyIndex.toString()] = new Enemy(this, col, 0, this.enemySpeed, "enemyBody", null, this.enemyIndex);
+        this.enemies[col][this.enemyIndex.toString() - 1].setWeapon(new EnemyWeapon(this, 0, 0,
+                                                                                    this.enemies[col][this.enemyIndex.toString() - 1],
+                                                                                    (this.enemyCycleTime - 3 * this.enemySpeed - 100) / 2,
+                                                                                    "enemyGun", null));
         return this.enemies[col][(this.enemyIndex - 1).toString()];
     }
 
