@@ -6,6 +6,7 @@ class GunWeak extends Phaser.GameObjects.Sprite {
 
         this.player = player;
         this.setOrigin(0.5, 0.8);
+        this.setScale(0.5, 1);
 
         scene.add.existing(this);
         return this;

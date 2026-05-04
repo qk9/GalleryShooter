@@ -7,8 +7,8 @@ class GalleryShooter extends Phaser.Scene {
         this.load.setPath("./assets/")
 
         // player's tank
-        this.load.image("playerBody", "Tanks/tankRed.png");
-        this.load.image("playerGun", "Tanks/barrelRed_outline.png");
+        this.load.image("playerBody", "Tanks/tankBlack.png");
+        this.load.image("playerGun", "Obstacles/barrelGrey_side.png");
 
         // parts of strong gun
         this.load.image("gunStrongArm", "Tanks/barrelBlack_outline.png");
@@ -53,7 +53,7 @@ class GalleryShooter extends Phaser.Scene {
 
         this.playerY = game.config.height - 150;
         this.playerSpeed = 1;
-        this.playerHealth = 100;
+        this.playerHealth = 3;
         this.positions = [
                           50, 
                           gameWidth / 5 + 50,
@@ -79,7 +79,7 @@ class GalleryShooter extends Phaser.Scene {
 
         this.enemyIndex = 0;
 
-        this.enemySpeed = 250;
+        this.enemySpeed = 750;
         this.enemyMoveGap = 2500;
 
         this.enemyCycleTime = this.enemyMoveGap + 3 * this.enemySpeed;
@@ -154,14 +154,11 @@ class GalleryShooter extends Phaser.Scene {
         
         // create enemy storage
 
-        // enemies stored by current column for projectile collision detection
+        // enemies stored by current column for collision detection
         this.enemies = [];
         for (let i = 0; i < this.pathColumns; i++) {
             this.enemies.push({});
         }
-
-        // prep to store loading time
-        this.loadTime = null;
 
         // enemy turn timeline
         this.moveTimeline = this.add.timeline([
@@ -183,81 +180,62 @@ class GalleryShooter extends Phaser.Scene {
                     console.log("enemy cycle complete");
                     console.log(this.scene.my.sprite.gunStrong.firingClock.handFireAngle);
                 }
-            }/*,
+            },
             { // for testing
                 at: this.enemyCycleTime,
                 run() {
                     this.scene.summonEnemyInColumn(Math.floor(Math.random() * this.scene.pathColumns))
                 }
-            }*/
+            }
         ]);
         this.moveTimeline.play();
 
         // ui
-        this.healthText = this.add.text(10, game.config.height - 10 - 32, "Health: " + this.playerHealth, {fontSize: 32, strokeThickness: 3});
+        this.healthText = this.add.text(10, game.config.height - 10 - 32, "Health: " + this.playerHealth, {fontSize: 32, strokeThickness: 3, fill: 'black', stroke: 'black'});
+        this.gameOverText = null;
+        this.restartKey = null;
 
-        this.testEnemy = this.summonEnemyInColumn(4);
-        //this.summonEnemyInColumn(2);
-        //this.summonEnemyInColumn(6);
-        //this.testEnemy.move();
-        //this.testEnemy.moves = ["right", "right", "any"];
-        //this.testEnemy.showPossibleMoves();
-        //this.testEnemy.move();
-
-        // test showPossibleMoves loop
-        /*var testPathDrawTimer = this.time.addEvent({
-            delay: 1000,
-            callback: () => {
-                let movesFull = true;
-                let justReset = false;
-                let moveToAdd = "right";
-                for(let move of this.testEnemy.moves) {
-                    if (move != moveToAdd) {
-                        movesFull = false;
-                    }
-                }
-                if (movesFull) {
-                    this.testEnemy.resetMoves();
-                    justReset = true;
-                }
-                if (justReset) {
-                    this.testEnemy.xIndex++;
-                    justReset = false;
-                }
-                else {
-                    this.testEnemy.addMove(moveToAdd);
-                }
-                for (let nodeArray of this.path.sprites) {
-                    for(let node of nodeArray) {
-                        node.makeNo();
-                    }
-                }
-                this.testEnemy.showPossibleMoves(3);
-            },
-            loop: true
-        })*/
+        // for testing
+        //this.testEnemy = this.summonEnemyInColumn(4);
     }
 
     update(time, delta) {
-        if (this.loadTime == null) {
-            this.loadTime = time;
-        }
         if (this.my.sprite.player.health > 0) {
-        this.my.sprite.player.update();
-        this.my.sprite.gunWeak.update();
-        this.my.sprite.gunStrong.update();
-        this.clearPathNodes();
-        for(let column of this.enemies) {
-            for (let enemy in column) {
-                column[enemy].update();
+            this.my.sprite.player.update();
+            this.my.sprite.gunWeak.update();
+            this.my.sprite.gunStrong.update();
+            this.clearPathNodes();
+            for(let column of this.enemies) {
+                for (let enemy in column) {
+                    column[enemy].update();
+                }
+            }
+            if (this.moveTimeline.complete) {
+                this.moveTimeline.play(true);
+            }
+            this.healthText.text = "Health: " + this.my.sprite.player.health;
+            if (this.my.sprite.gunStrong.x < 300 && this.healthText.x == 10) {
+                this.healthText.x = 350;
+            }
+            else if (this.my.sprite.gunStrong.x >= 300 && this.healthText.x == 350) {
+                this.healthText.x = 10;
             }
         }
-        if (this.moveTimeline.complete) {
-            this.moveTimeline.play(true);
+        else if (this.gameOverText == null) {
+            this.gameOverText = this.add.text(game.config.width / 2 - 350, game.config.height / 2 - 400, "    Game over!\nPress R to restart.", {fontSize: 64, strokeThickness: 5});
+            this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+            for (let column of this.enemies) {
+                for (let enemy in column) {
+                    column[enemy].kill();
+                }
+            }
+            this.healthText.text = "Health: " + this.my.sprite.player.health;
         }
-        this.healthText.text = "Health: " + this.my.sprite.player.health;
+        else {
+            if (Phaser.Input.Keyboard.JustDown(this.restartKey)) {
+                this.init_game();
+            }
         }
-        //console.log(time, (time - this.loadTime % this.enemyCycleTime) / this.enemyCycleTime);
     }
 
     // summon an enemy at the top of the given column.
@@ -268,6 +246,15 @@ class GalleryShooter extends Phaser.Scene {
                                                                                     (this.enemyCycleTime - 3 * this.enemySpeed - 100) / 2,
                                                                                     "enemyGun", null));
         return this.enemies[col][(this.enemyIndex - 1).toString()];
+    }
+
+    increaseDifficulty() {
+        if (this.enemyMoveGap > 500) {
+            this.enemyMoveGap -= 250;
+        }
+        if (this.enemySpeed > 300) {
+            this.enemySpeed -= 50;
+        }
     }
 
     clearPathNodes() {

@@ -295,13 +295,13 @@ class Enemy extends Phaser.GameObjects.Sprite {
             tweens: [
                 {
                     rotation: rotAngle,
-                    duration: this.speed / 4,
+                    duration: this.scene.enemySpeed / 4,
                     ease: 'Exp.easeInOut'
                 },
                 {
                     x: node.x,
                     y: node.y,
-                    duration: 3 * this.speed / 4,
+                    duration: 3 * this.scene.enemySpeed / 4,
                     ease: 'Quad.easeOut'
                 }
             ],
