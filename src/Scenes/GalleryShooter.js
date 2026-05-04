@@ -15,6 +15,12 @@ class GalleryShooter extends Phaser.Scene {
         this.load.image("gunStrongJoint", "Obstacles/oil.png");
         this.load.image("gunStrongBarrel", "Obstacles/barrelGrey_side.png");
 
+        // parts of firing clock
+        this.load.image("clockFaceUnready", "Obstacles/barrelGrey_up.png");
+        this.load.image("clockFaceReady", "Obstacles/barrelRed_up.png");
+        this.load.image("clockHandUnready", "Tanks/barrelBlack.png");
+        this.load.image("clockHandReady", "Tanks/barrelBeige.png");
+
         // enemy tanks
         this.load.image("enemyBody", "Tanks/tankBeige.png");
         this.load.image("enemyGun", "Tanks/barrelBeige_outline.png")
@@ -28,12 +34,16 @@ class GalleryShooter extends Phaser.Scene {
         this.load.image("dirt", "Environment/dirt.png");
 
         // enemy pathway nodes
+        this.load.image("pathNo", "Smoke/smokeGrey1.png");
         this.load.image("pathMaybe", "Smoke/smokeYellow1.png");
         this.load.image("pathSure", "Smoke/smokeOrange1.png");
     }
 
     create() {
+        this.init_game();
+    }
 
+    init_game() {
         // set constants
         
         this.my = {sprite: {}};
@@ -46,10 +56,11 @@ class GalleryShooter extends Phaser.Scene {
         this.playerHealth = 100;
         this.positions = [
                           50, 
-                          gameWidth / 4, 
-                          gameWidth / 2,
-                          gameWidth * 3 / 4,
-                          gameWidth
+                          gameWidth / 5 + 50,
+                          2 * gameWidth / 5 + 50,
+                          3 * gameWidth / 5 + 50,
+                          4 * gameWidth / 5 + 50,
+                          gameWidth + 50
                          ];
 
         this.sandbagY = this.playerY - 80;
@@ -68,7 +79,7 @@ class GalleryShooter extends Phaser.Scene {
 
         this.enemyIndex = 0;
 
-        this.enemySpeed = 1000;
+        this.enemySpeed = 750;
 
         this.enemyCycleTime = 4000 + 3 * this.enemySpeed;
 
@@ -86,10 +97,10 @@ class GalleryShooter extends Phaser.Scene {
         // create background
         for(let currX = 64; currX < game.config.width; currX += 128) {
             for(let currY = this.sandbagY - 64; currY > 0; currY -= 128) {
-                this.add.sprite(currX, currY, "sand");
+                this.add.sprite(currX, currY, "dirt");
             }
             for(let currY = this.sandbagY + 64; currY < game.config.height; currY += 128) {
-                this.add.sprite(currX, currY, "dirt");
+                this.add.sprite(currX, currY, "sand");
             }
         }
 
@@ -114,7 +125,7 @@ class GalleryShooter extends Phaser.Scene {
             this.path.sprites.push(column);
             for(let j = 0; j < this.pathRows; j++) {
                 this.path.sprites[i].push(new PathNode(this, i, j, "pathMaybe", null));
-                this.path.sprites[i][j].hide();
+                this.path.sprites[i][j].makeNo();
             }
         }
 
@@ -148,7 +159,7 @@ class GalleryShooter extends Phaser.Scene {
             this.enemies.push({});
         }
 
-        // enemy movement timeline
+        // enemy turn timeline
         this.moveTimeline = this.add.timeline([
             {
                 at: this.enemyCycleTime / 2,
@@ -161,31 +172,13 @@ class GalleryShooter extends Phaser.Scene {
                         }
                     }
                 }
-            },
-            {
-                from: this.enemySpeed - 20,
-                run() {
-                    this.scene.clearPathNodes();
-                }
-            },
-            {
-                from: this.enemySpeed,
-                run() {
-                    this.scene.clearPathNodes();
-                }
-            },
-            {
-                from: this.enemySpeed,
-                run() {
-                    this.scene.clearPathNodes();
-                }
-            },
+            }/*,
             { // for testing
                 at: this.enemyCycleTime,
                 run() {
                     this.scene.summonEnemyInColumn(Math.floor(Math.random() * this.scene.pathColumns))
                 }
-            }
+            }*/
         ]);
         this.moveTimeline.play();
 
@@ -225,7 +218,7 @@ class GalleryShooter extends Phaser.Scene {
                 }
                 for (let nodeArray of this.path.sprites) {
                     for(let node of nodeArray) {
-                        node.hide();
+                        node.makeNo();
                     }
                 }
                 this.testEnemy.showPossibleMoves(3);
@@ -237,7 +230,8 @@ class GalleryShooter extends Phaser.Scene {
     update(time, delta) {
         this.my.sprite.player.update();
         this.my.sprite.gunWeak.update();
-        this.my.sprite.gunStrong.update();
+        this.my.sprite.gunStrong.update(time);
+        this.clearPathNodes();
         for(let column of this.enemies) {
             for (let enemy in column) {
                 column[enemy].update();
@@ -263,7 +257,7 @@ class GalleryShooter extends Phaser.Scene {
     clearPathNodes() {
         for (let nodeArray of this.path.sprites) {
             for(let node of nodeArray) {
-                node.hide();
+                node.makeNo();
             }
         }
     }

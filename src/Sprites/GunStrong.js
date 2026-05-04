@@ -47,6 +47,9 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         this.scene.children.bringToTop(this.armOuter);
         this.scene.children.bringToTop(this.barrel);
 
+        // firing clock
+        this.firingClock = new FiringClock(this.scene, 0, 0, this, this.scene.textures.get("clockFaceReady"), null);
+
         // coordinates for fire()
         this.targetX = 0;
         this.targetY = 0;
@@ -55,7 +58,7 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         return this;
     }
 
-    update() {
+    update(time) {
         // listen for inputs
         if(Phaser.Input.Keyboard.JustDown(this.fireKey)) {
             this.attack();
@@ -80,6 +83,8 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         this.barrel.x = this.jointOuter.x + (45 * Math.cos(this.angOuter));
         this.barrel.y = this.jointOuter.y + (45 * Math.sin(this.angOuter));
         this.barrel.setRotation(this.angOuter + (Math.PI / 2));
+
+        this.firingClock.update(time);
     }
 
     moveTo(x) {
@@ -289,6 +294,7 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         this.targetGeom.strokeLineShape(line4);
     }
 
+    // takes (this.movementTime * 6.25) ms to execute
     attack() {
         if (!this.canFire) {
             return;
@@ -311,38 +317,39 @@ class GunStrong extends Phaser.GameObjects.Sprite {
 
         this.timeline = this.scene.add.timeline([
             {
-                at: 1000,
+                at: this.movementTime * 1.25,
                 run() {
                     this.moveTo(player.positions[player.pos] + ((Math.random() - 0.5) * 200));
                 },
                 target: this
             },
             {
-                from: 1000,
+                from: this.movementTime * 1.25,
                 run() {
                     this.twistInnerToAngle(Phaser.Math.Angle.Between(this.x, this.y, this.targetX, this.y - 150));
                 },
                 target: this
             },
             {
-                from: 1000,
+                from: this.movementTime * 1.25,
                 run() {
                     this.twistMiddleToAngle(Phaser.Math.Angle.Between(this.jointMiddle.x, this.jointMiddle.y, this.targetX, this.jointMiddle.y + 30));
                 },
                 target: this
             },
             {
-                from: 1000,
+                from: this.movementTime * 1.25,
                 run() {
                     this.twistOuterToAngle(Phaser.Math.Angle.Between(this.jointOuter.x, this.jointOuter.y, this.targetX, this.targetY));
                 },
                 target: this
             },
             {
-                from: 1000,
+                from: this.movementTime * 1.25,
                 run() {
                     this.fire(this.targetX, this.targetY);
                     this.targetGeom.clear();
+                    this.firingClock.changeState(false);
                 },
                 target: this
             },
@@ -350,6 +357,7 @@ class GunStrong extends Phaser.GameObjects.Sprite {
                 from: this.cooldown,
                 run() {
                     this.canFire = true;
+                    this.firingClock.changeState(true);
                 },
                 target: this
             }

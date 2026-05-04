@@ -21,26 +21,26 @@ class PathNode extends Phaser.GameObjects.Sprite {
     }
 
     // resets path nodes after enemies finish moving
-    hide() {
-        this.setVisible(false);
-        this.setTexture(this.scene.textures.get("pathMaybe"));
+    makeNo() {
+        this.setScale(0.1, 0.1);
+        this.setTexture(this.scene.textures.get("pathNo"));
     }
 
-    hideIfUnsure() {
+    makeNoIfUnsure() {
         if (this.texture.key != "pathSure") {
-            this.hide();
+            this.makeNo();
         }
     }
 
     makeMaybe() {
+        this.setScale(0.12, 0.12);
         if (this.texture.key != "pathSure") {
-            this.visible = true;
             this.setTexture(this.scene.textures.get("pathMaybe"));
         }
     }
 
     makeSure() {
-        this.visible = true;
+        this.setScale(0.14, 0.14);
         this.setTexture(this.scene.textures.get("pathSure"));
     }
 

@@ -90,6 +90,10 @@ class Enemy extends Phaser.GameObjects.Sprite {
         if (this.weapon != null) {
             this.weapon.update();
         }
+
+        if (this.getMoveSum() != this.xIndex) {
+            this.showPossibleMoves();
+        }
     }
 
     addToMoveCycle() {
@@ -185,18 +189,18 @@ class Enemy extends Phaser.GameObjects.Sprite {
             // the evil hexagon grid math is extremely close to displaying all possible moves for any given combo. There is one edge case that I know of. This if/else statement handles that.
             if (rightIndex == this.xIndex + (this.moves.length - this.moveIndex) - 2 && (this.moves.length - this.moveIndex) == 3) { // the array is ["left", "any", "any"] in some order
                 if (this.xIndex < this.scene.path.sprites.length - 1 && this.yIndex - (this.xIndex) % 2 > 0) { // if the upper edge case node exists, then unhighlight it
-                    this.scene.path.sprites[this.xIndex + 1][this.yIndex - 1 - (this.xIndex) % 2].hideIfUnsure();
+                    this.scene.path.sprites[this.xIndex + 1][this.yIndex - 1 - (this.xIndex) % 2].makeNoIfUnsure();
                 }
                 if (this.xIndex < this.scene.path.sprites.length - 1 && this.yIndex + 2  + (this.xIndex + 1) % 2 < this.scene.path.sprites[0].length) { // if the lower edge case node exists, then unhighlight it
-                    this.scene.path.sprites[this.xIndex + 1][this.yIndex + 2 + (this.xIndex + 1) % 2].hideIfUnsure();
+                    this.scene.path.sprites[this.xIndex + 1][this.yIndex + 2 + (this.xIndex + 1) % 2].makeNoIfUnsure();
                 }
             }
             else if (vertMoves == 2 && (this.moves.length - this.moveIndex) == 3) { // the array is ["right", "any", "any"] in some order
                 if (this.xIndex > 0 && this.yIndex - (this.xIndex) % 2 > 0) { // if the upper edge case node exists, then unhighlight it
-                    this.scene.path.sprites[this.xIndex - 1][this.yIndex - 1 - (this.xIndex) % 2].hideIfUnsure();
+                    this.scene.path.sprites[this.xIndex - 1][this.yIndex - 1 - (this.xIndex) % 2].makeNoIfUnsure();
                 }
                 if (this.xIndex > 0 && this.yIndex + 2 + (this.xIndex + 1) % 2 < this.scene.path.sprites[0].length) { // if the lower edge case node exists, then unhighlight it
-                    this.scene.path.sprites[this.xIndex - 1][this.yIndex + 2 + (this.xIndex + 1) % 2].hideIfUnsure();
+                    this.scene.path.sprites[this.xIndex - 1][this.yIndex + 2 + (this.xIndex + 1) % 2].makeNoIfUnsure();
                 }
             }
         }
@@ -258,7 +262,6 @@ class Enemy extends Phaser.GameObjects.Sprite {
     move() {
         if (this.moveIndex >= this.moves.length) {
             //console.log("move cycle finished");
-            this.weapon.attack(Math.min(Math.max(this.scene.my.sprite.player.pos + Math.floor(Math.random() * 3) - 1, 0), this.scene.my.sprite.player.positions.length - 1));
             this.moveIndex = 0;
             this.resetMoves();
             return;
@@ -321,6 +324,12 @@ class Enemy extends Phaser.GameObjects.Sprite {
         }
         delete this.scene.enemies[this.xIndex][this.sceneIndex.toString()];
         this.graphics.destroy();
+        if (Object.hasOwn(this.weapon, "firingAnim")) {
+            this.weapon.firingAnim.stop();
+            this.weapon.firingAnim.destroy();
+        }
+        this.weapon.targetGeom.clear();
+        this.weapon.targetGeom.destroy();
         this.weapon.destroy();
         this.destroy();
     }
