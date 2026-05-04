@@ -79,9 +79,10 @@ class GalleryShooter extends Phaser.Scene {
 
         this.enemyIndex = 0;
 
-        this.enemySpeed = 750;
+        this.enemySpeed = 250;
+        this.enemyMoveGap = 2500;
 
-        this.enemyCycleTime = 4000 + 3 * this.enemySpeed;
+        this.enemyCycleTime = this.enemyMoveGap + 3 * this.enemySpeed;
 
         this.prototypes = {sprite: {}};
 
@@ -159,6 +160,9 @@ class GalleryShooter extends Phaser.Scene {
             this.enemies.push({});
         }
 
+        // prep to store loading time
+        this.loadTime = null;
+
         // enemy turn timeline
         this.moveTimeline = this.add.timeline([
             {
@@ -171,6 +175,13 @@ class GalleryShooter extends Phaser.Scene {
                             }
                         }
                     }
+                }
+            },
+            {
+                at: this.enemyCycleTime,
+                run() {
+                    console.log("enemy cycle complete");
+                    console.log(this.scene.my.sprite.gunStrong.firingClock.handFireAngle);
                 }
             }/*,
             { // for testing
@@ -185,7 +196,7 @@ class GalleryShooter extends Phaser.Scene {
         // ui
         this.healthText = this.add.text(10, game.config.height - 10 - 32, "Health: " + this.playerHealth, {fontSize: 32, strokeThickness: 3});
 
-        //this.testEnemy = this.summonEnemyInColumn(4);
+        this.testEnemy = this.summonEnemyInColumn(4);
         //this.summonEnemyInColumn(2);
         //this.summonEnemyInColumn(6);
         //this.testEnemy.move();
@@ -228,9 +239,13 @@ class GalleryShooter extends Phaser.Scene {
     }
 
     update(time, delta) {
+        if (this.loadTime == null) {
+            this.loadTime = time;
+        }
+        if (this.my.sprite.player.health > 0) {
         this.my.sprite.player.update();
         this.my.sprite.gunWeak.update();
-        this.my.sprite.gunStrong.update(time);
+        this.my.sprite.gunStrong.update();
         this.clearPathNodes();
         for(let column of this.enemies) {
             for (let enemy in column) {
@@ -241,7 +256,8 @@ class GalleryShooter extends Phaser.Scene {
             this.moveTimeline.play(true);
         }
         this.healthText.text = "Health: " + this.my.sprite.player.health;
-        //console.log("xIndex: ", this.testEnemy.xIndex, "yIndex: ", this.testEnemy.yIndex, "moveIndex: ", this.testEnemy.moveIndex);
+        }
+        //console.log(time, (time - this.loadTime % this.enemyCycleTime) / this.enemyCycleTime);
     }
 
     // summon an enemy at the top of the given column.

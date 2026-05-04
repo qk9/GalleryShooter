@@ -260,16 +260,26 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
     // move cycle takes (this.speed * 3) frames to execute.
     move() {
+        // if the enemy is done moving
         if (this.moveIndex >= this.moves.length) {
-            //console.log("move cycle finished");
             this.moveIndex = 0;
+            if (this.yIndex < this.oldYIndex) {
+                this.weapon.attack(this.scene.my.sprite.player.pos);
+            }
             this.resetMoves();
+            console.log("moving cycle complete");
+            console.log(this.scene.my.sprite.gunStrong.firingClock.handFireAngle);
             return;
         }
+        // if the enemy is at the very bottom of the map
         if (this.yIndex == this.scene.path.sprites[0].length - 1 && this.xIndex % 2 == 0) {
             this.moving = false;
             this.atBottom();
             return;
+        }
+        // if the enemy just started moving
+        if (this.moveIndex == 0) {
+            this.oldYIndex = this.yIndex;
         }
         this.showPossibleMoves();
 

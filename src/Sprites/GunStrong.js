@@ -58,7 +58,7 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         return this;
     }
 
-    update(time) {
+    update() {
         // listen for inputs
         if(Phaser.Input.Keyboard.JustDown(this.fireKey)) {
             this.attack();
@@ -84,7 +84,7 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         this.barrel.y = this.jointOuter.y + (45 * Math.sin(this.angOuter));
         this.barrel.setRotation(this.angOuter + (Math.PI / 2));
 
-        this.firingClock.update(time);
+        this.firingClock.update();
     }
 
     moveTo(x) {

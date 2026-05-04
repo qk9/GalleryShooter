@@ -12,24 +12,23 @@ class FiringClock extends Phaser.GameObjects.Sprite {
         this.handFire.setScale(0.2, 0.4);
         this.handFire.setOrigin(0.5, 0.25);
 
-        this.handFireAngle = Math.PI / -2;
+        this.handFireAngle = 0;
         this.handFire.rotation = this.handFireAngle;
 
         scene.add.existing(this);
         return this;
     }
 
-    update(time) {
+    update() {
         this.scene.children.bringToTop(this);
         this.scene.children.bringToTop(this.handFire);
         this.x = this.gunStrong.jointMiddle.x;
-        this.y = this.gunStrong.jointMiddle.y;
+        this.y = /*this.gunStrong.jointMiddle.y*/50;
         this.handFire.x = this.x;
         this.handFire.y = this.y;
         // update hand position
-        this.handFireAngle = (((time + (this.gunStrong.movementTime * 6.25) - (this.scene.enemySpeed * 3.1) % this.scene.enemyCycleTime) / this.scene.enemyCycleTime) * 2 * Math.PI);
+        this.handFireAngle = (((this.scene.moveTimeline.elapsed - (this.scene.enemySpeed * 3)) % this.scene.enemyCycleTime) / this.scene.enemyCycleTime) * 2 * Math.PI;
         this.handFire.rotation = this.handFireAngle;
-
     }
 
     changeState(state) {

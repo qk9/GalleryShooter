@@ -59,7 +59,6 @@ class Player extends Phaser.GameObjects.Sprite {
             });
             this.moved = false;
         }
-        console.log(this.health);
     }
 
 }
