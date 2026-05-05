@@ -169,6 +169,8 @@ class GalleryShooter extends Phaser.Scene {
         for (let i = 0; i < this.pathColumns; i++) {
             this.enemies.push({});
         }
+        // store number of living enemies for next-wave rollover
+        this.numLivingEnemies = 0;
 
         // create enemy turn timeline
         this.moveTimeline = this.add.timeline([
@@ -188,45 +190,133 @@ class GalleryShooter extends Phaser.Scene {
                 at: this.enemyCycleTime,
                 run() {
                 }
-            },
-            { // for testing
-                at: this.enemyCycleTime,
-                run() {
-                    this.scene.summonEnemyInColumn(Math.floor(Math.random() * this.scene.pathColumns))
-                }
             }
         ]);
         this.moveTimeline.play();
+
+        // create enemy wave data
+        // wave segments are stored arrays in children of this.waves.
+        // to spawn a wave segment containing n enemies, access an element of this.waves[n.toString()]
+        // format for wave segment array: [width of spawns, spawn0, spawn1, spawn2, ..., spawnN]
+        this.waves = {};
+        
+        this.waves["1"] = [];
+        // 1 enemy
+        this.waves["1"].push([1, 0]);
+
+        this.waves["2"] = [];
+        // 2 adjacent enemies
+        this.waves["2"].push([2, 0, 1]);
+        // 2 slightly split enemies
+        this.waves["2"].push([3, 0, 2]);
+        // 2 decently split enemies
+        this.waves["2"].push([7, 0, 6]);
+        // 2 very split enemies
+        this.waves["2"].push([15, 0, 14]);
+
+        this.waves["3"] = [];
+        // 3 adjacent enemies
+        this.waves["3"].push([3, 0, 1, 2]);
+        // 3 slightly split enemies
+        this.waves["3"].push([5, 0, 2, 4]);
+        // 3 decently split enemies
+        this.waves["3"].push([11, 0, 5, 10]);
+        // 3 very split enemies
+        this.waves["3"].push([15, 0, 7, 14]);
+
+        this.waves["4"] = [];
+        // 4 adjacent enemies
+        this.waves["4"].push([4, 0, 1, 2, 3]);
+        // 4 slightly split enemies
+        this.waves["4"].push([7, 0, 2, 4, 6]);
+        // 4 very split enemies
+        this.waves["4"].push([15, 0, 4, 10, 14]);
+
+        // two groups of two adjacent
+        this.waves["4"].push([7, 0, 1, 5, 6]);
+        // two groups of two fairly split
+        this.waves["4"].push([11, 0, 1, 9, 10]);
+        // two groups of two very split
+        this.waves["4"].push([15, 0, 1, 13, 14]);
+
+        this.waves["5"] = [];
+        // 5 adjacent enemies
+        this.waves["5"].push([5, 0, 1, 2, 3, 4]);
+        // 5 slightly split enemies
+        this.waves["5"].push([9, 0, 2, 4, 6, 8]);
+        // 5 more split enemies
+        this.waves["5"].push([13, 0, 3, 6, 9, 12]);
+
+        this.waves["6"] = [];
+        // 6 adjacent enemies
+        this.waves["6"].push([6, 0, 1, 2, 3, 4, 5]);
+        // 6 split enemies
+        this.waves["6"].push([11, 0, 2, 4, 6, 8, 10]);
+        // two groups of three slightly split
+        this.waves["6"].push([9, 0, 1, 2, 6, 7, 8]);
+        // two groups of three very split
+        this.waves["6"].push([15, 0, 1, 2, 12, 13, 14]);
+
+        this.waves["7"] = [];
+        this.waves["7"].push([8, 0, 1, 2, 3, 4, 5, 6, 7]);
+        // enemy in every odd row
+        this.waves["7"].push([15, 1, 3, 5, 7, 9, 11, 13]);
+
+        this.waves["8"] = [];
+        // 8 adjacent enemies
+        this.waves["8"].push([8, 0, 1, 2, 3, 4, 5, 6, 7]);
+        // enemy in every even row
+        this.waves["8"].push([15, 0, 2, 4, 6, 8, 10, 12, 14]);
+        // two groups of four somewhat split
+        this.waves["8"].push([12, 0, 1, 2, 3, 8, 9, 10, 11]);
+        // two groups of four very split
+        this.waves["8"].push([15, 0, 1, 2, 3, 11, 12, 13, 14]);
+
+        this.waves["15"] = [];
+        // enemy in every row
+        this.waves["15"].push([15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
+        // five triplet enemies
+        this.waves["15"].push([13, 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12]);
+
+        // wave spawning interface
+        this.currWave = 0;
+        this.waveSpawnIndex = 0;
+        this.waveSegments = []; // push [numEnemies, formation] pairs here
 
         // ui
         this.healthText = this.add.text(10, game.config.height - 10 - 32, "Health: " + this.playerHealth, {fontSize: 32, strokeThickness: 3, fill: 'black', stroke: 'black'});
         this.gameOverText = null;
         this.restartKey = null;
-
-        // for testing
-        //this.testEnemy = this.summonEnemyInColumn(4);
     }
 
     update(time, delta) {
         if (this.my.sprite.player.health > 0) {
+            // update player bodies
             this.my.sprite.player.update();
             this.my.sprite.gunWeak.update();
             this.my.sprite.gunStrong.update();
+            // render enemy movement possibilities
             this.clearPathNodes();
             for(let column of this.enemies) {
                 for (let enemy in column) {
                     column[enemy].update();
                 }
             }
+            // maintain enemy movement cycle
             if (this.moveTimeline.complete) {
                 this.moveTimeline.play(true);
             }
+            // move health UI out from behind gunStrong if needed
             this.healthText.text = "Health: " + this.my.sprite.player.health;
             if (this.my.sprite.gunStrong.x < 300 && this.healthText.x == 10) {
                 this.healthText.x = 350;
             }
             else if (this.my.sprite.gunStrong.x >= 300 && this.healthText.x == 350) {
                 this.healthText.x = 10;
+            }
+            // spawn next wave if needed
+            if (!Object.hasOwn(this, "waveSpawner") && this.numLivingEnemies == 0) {
+                this.spawnWave();
             }
         }
         else if (this.gameOverText == null) { // game is over
@@ -254,8 +344,60 @@ class GalleryShooter extends Phaser.Scene {
         }
     }
 
-    spawnWave(wave) {
+    spawnWave() {
+        // reset current wave segments
+        this.waveSpawnIndex = 0;
+        this.waveSegments = [];
+        if (!Object.hasOwn(this, "waveSpawner")) {
+            this.waveSpawner = this.add.timeline([]);
+        }
+        // iterate wave difficulty
+        else {
+            this.increaseDifficulty();
+            this.currWave++;
+            this.waveSpawner.clear();
+        }
 
+        // generate current wave segments
+        let enemiesToSpawn = 5 + (this.currWave * 2);
+        console.log("enemiesToSpawn: ", enemiesToSpawn);
+        while (enemiesToSpawn > 0) {
+            let index = -1;
+            if (enemiesToSpawn > 14) {
+                if (Math.random() > 0.75) {
+                    index = 15;
+                }
+            }
+            if (index == -1) {
+                index = Math.floor(Math.random() * Math.min(enemiesToSpawn, 8) + 1);
+            }
+            console.log("index: ", index);
+            this.waveSegments.push(this.waves[index.toString()][Math.floor(Math.random() * this.waves[index.toString()].length)]);
+            enemiesToSpawn -= index;
+        }
+        // construct wave spawner timeline
+        for (let i = 0; i < this.waveSegments.length; i++) {
+            this.waveSpawner.add({
+                from: this.enemyCycleTime,
+                run() {
+                    let laneOffset = Math.floor(Math.random() * (this.pathColumns - this.waveSegments[this.waveSpawnIndex][0]));
+                    for (let i = 1; i < this.waveSegments[this.waveSpawnIndex].length; i++) {
+                        this.summonEnemyInColumn(this.waveSegments[this.waveSpawnIndex][i] + laneOffset);
+                    }
+                    this.waveSpawnIndex++;
+                },
+                target: this
+            })
+        }
+        this.waveSpawner.add({
+            from: 0,
+            run() {
+                this.waveSpawner.destroy();
+                delete this.waveSpawner;
+            },
+            target: this
+        })
+        this.waveSpawner.play();
     }
 
     // summon an enemy at the top of the given column.
@@ -265,15 +407,16 @@ class GalleryShooter extends Phaser.Scene {
                                                                                     this.enemies[col][this.enemyIndex.toString() - 1],
                                                                                     (this.enemyMoveGap - 300) / 2,
                                                                                     "enemyGun", null));
+        this.numLivingEnemies++;
         return this.enemies[col][(this.enemyIndex - 1).toString()];
     }
 
     increaseDifficulty() {
-        if (this.enemyMoveGap > 500) {
-            this.enemyMoveGap -= 250;
+        if (this.enemyMoveGap > 750) {
+            this.enemyMoveGap -= 125;
         }
         if (this.enemySpeed > 300) {
-            this.enemySpeed -= 50;
+            this.enemySpeed -= 25;
         }
     }
 

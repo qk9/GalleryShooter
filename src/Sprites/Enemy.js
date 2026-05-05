@@ -332,6 +332,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
             this.weapon.firingAnim.stop();
             this.weapon.firingAnim.destroy();
         }
+        this.scene.numLivingEnemies--;
         this.weapon.targetGeom.clear();
         this.weapon.targetGeom.destroy();
         this.weapon.destroy();
