@@ -54,11 +54,21 @@ class GunWeak extends Phaser.GameObjects.Sprite {
             let currList = this.scene.enemies[lowIndex];
             for (let enemy in currList) {
                 let currEnemy = currList[enemy];
-                if (Phaser.Geom.Intersects.LineToLine(line, currEnemy.leftLine) && currEnemy.getMoveSum() < this.scene.path.sprites.length - 1) {
-                    currEnemy.addMove("right");
+                if (Phaser.Geom.Intersects.LineToLine(line, currEnemy.leftLine) && currEnemy.getMoveSum() < this.scene.path.sprites[0].length - 1) {
+                    if (currEnemy.moves[0] != "left") {
+                        currEnemy.addMove("right");
+                    }
+                    else if (currEnemy.getMoveSum() < this.scene.path.sprites[0].length - 2) {
+                        currEnemy.addMove("right");
+                    }
                 }
                 else if (Phaser.Geom.Intersects.LineToLine(line, currEnemy.rightLine) && currEnemy.getMoveSum() > 0) {
-                    currEnemy.addMove("left");
+                    if (currEnemy.moves[0] != "right") {
+                        currEnemy.addMove("left");
+                    }
+                    else if (currEnemy.getMoveSum() > 1) {
+                        currEnemy.addMove("left");
+                    }
                 }
             }
         }

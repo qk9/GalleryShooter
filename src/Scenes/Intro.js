@@ -214,7 +214,7 @@ class Intro extends Phaser.Scene {
         this.tutorialStage = 0;
         this.leftKey.on("down", () => {this.moveKeysPressed[0] = true;})
         this.rightKey.on("down", () => {this.moveKeysPressed[1] = true;})
-        this.explainerText = this.add.text(game.config.width / 2 - 375, game.config.height / 2 - 400, "Welcome!\nUse A and D to move.", {fontSize: 64, strokeThickness: 5, align: 'center', fill: 'black', stroke: 'black'});
+        this.explainerText = this.add.text(game.config.width / 2 - 375, 10, "Welcome!\nUse A and D to move.", {fontSize: 64, strokeThickness: 5, align: 'center', fill: 'black', stroke: 'black'});
     }
 
     update() {
@@ -259,7 +259,7 @@ class Intro extends Phaser.Scene {
             this.explainerText.text = "Notice that some Pathway\n nodes near the enemy \nhave turned yellow.";
             this.explainerText.x = game.config.width / 2 - 475;
             this.time.addEvent({
-                delay: 3000,
+                delay: 6000,
                 callback: () => {
                     this.explainerText.text = "These yellow nodes show\nwhere the enemy might land\nafter its next move.";
                     this.explainerText.x = game.config.width / 2 - 505;},
@@ -267,7 +267,7 @@ class Intro extends Phaser.Scene {
 
             });
             this.time.addEvent({
-                delay: 6000,
+                delay: 12000,
                 callback: () => {
                     this.explainerText.text = "Since you shot to the\n";
                     if (this.enemies[7]["0"].getMoveSum() < 7) {
@@ -288,7 +288,7 @@ class Intro extends Phaser.Scene {
 
             });
             this.time.addEvent({
-                delay: 9000,
+                delay: 18000,
                 callback: () => {
                     this.explainerText.text = "Try shooting at it\na few more times!";
                 this.explainerText.x = game.config.width / 2 - 350;
@@ -302,7 +302,7 @@ class Intro extends Phaser.Scene {
             this.explainerText.text = "Enemies hop to an adjacent\npathway node three times\nwhen they move.";
             this.explainerText.x = game.config.width / 2 - 500;
             this.time.addEvent({
-                delay: 3000,
+                delay: 6000,
                 callback: () => {
                     this.explainerText.text = "Each time you shoot near an\nenemy with your tank's gun,\none move is influenced.";
                     this.explainerText.x = game.config.width / 2 - 525;},
@@ -310,7 +310,7 @@ class Intro extends Phaser.Scene {
 
             });
             this.time.addEvent({
-                delay: 6000,
+                delay: 12000,
                 callback: () => {
                     this.explainerText.text = "Since you've shot near it\nthree times, you've\ninfluenced all of its moves.";
                     this.explainerText.x = game.config.width / 2 - 550;},
@@ -318,7 +318,7 @@ class Intro extends Phaser.Scene {
 
             });
             this.time.addEvent({
-                delay: 9000,
+                delay: 18000,
                 callback: () => {
                     this.explainerText.text = "Now, let's see where\nit ends up!";
                     this.explainerText.x = game.config.width / 2 - 350;
@@ -327,7 +327,7 @@ class Intro extends Phaser.Scene {
 
             });
             this.time.addEvent({
-                delay: 13000,
+                delay: 22000,
                 callback: () => {
                     this.tutorialStage = 5;
                     this.my.sprite.gunStrong.fireKey = this.shootStrongKey;},
@@ -340,7 +340,7 @@ class Intro extends Phaser.Scene {
             this.explainerText.text = "As you've probably noticed,\nyour tank's gun is too\nweak to kill enemies."
             this.explainerText.x = game.config.width / 2 - 510;
             this.time.addEvent({
-                delay: 3000,
+                delay: 6000,
                 callback: () => {
                     this.explainerText.text = "Your cannon, though, is\na different story. Try that\none! (Remember, [SPACE]).";
                     this.explainerText.x = game.config.width / 2 - 525;},
@@ -356,7 +356,7 @@ class Intro extends Phaser.Scene {
             this.explainerText.text = "Great job!\nOne last thing:"
             this.explainerText.x = game.config.width / 2 - 275;
             this.time.addEvent({
-                delay: 3000,
+                delay: 6000,
                 callback: () => {
                     this.explainerText.text = "Notice that the clock on\nyour cannon has started.";
                     this.explainerText.x = game.config.width / 2 - 475;},
@@ -364,7 +364,7 @@ class Intro extends Phaser.Scene {
 
             });
             this.time.addEvent({
-                delay: 6000,
+                delay: 12000,
                 callback: () => {
                     this.explainerText.text = "If you press shoot when\nthe hand is aligned with\nthe mark at the top,";
                     this.explainerText.x = game.config.width / 2 - 475;},
@@ -372,7 +372,7 @@ class Intro extends Phaser.Scene {
 
             });
             this.time.addEvent({
-                delay: 9000,
+                delay: 18000,
                 callback: () => {
                     this.explainerText.text = "then the cannon will fire\njust after the enemies\nhave finished moving.";
                     this.explainerText.x = game.config.width / 2 - 475;},
@@ -380,7 +380,7 @@ class Intro extends Phaser.Scene {
 
             });
             this.time.addEvent({
-                delay: 12000,
+                delay: 24000,
                 callback: () => {
                     this.explainerText.text = "The cannon needs to\nrecharge for a while\nafter firing.";
                     this.explainerText.x = game.config.width / 2 - 400;},
@@ -388,7 +388,7 @@ class Intro extends Phaser.Scene {
 
             });
             this.time.addEvent({
-                delay: 15000,
+                delay: 30000,
                 callback: () => {
                     this.explainerText.text = "When the clock turns\nfrom gray to orange,\nyou can shoot again!";
                     this.explainerText.x = game.config.width / 2 - 375;},
@@ -396,10 +396,10 @@ class Intro extends Phaser.Scene {
 
             });
             this.time.addEvent({
-                delay: 18000,
+                delay: 36000,
                 callback: () => {
                     this.explainerText.text = "Best of luck!\nPress [SPACE] to start.";
-                    this.explainerText.x = game.config.width / 2 - 350;
+                    this.explainerText.x = game.config.width / 2 - 425;
                     this.tutorialStage = 7;
                     this.shootStrongKey.on("down", () => {this.scene.start("galleryShooter")});},
                 callbackScope: this,
