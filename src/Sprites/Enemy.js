@@ -212,6 +212,9 @@ class Enemy extends Phaser.GameObjects.Sprite {
         let connections = this.scene.path.sprites[this.xIndex][this.yIndex].getConnections();
         let lowIndex = -1;
         let highIndex = -1;
+        if (this.xIndex == 0 || this.xIndex == this.scene.path.sprites.length - 1) {
+            this.moves[index] = "any";
+        }
         switch(this.moves.at(index)) {
             case "left":
                 lowIndex = 0;
