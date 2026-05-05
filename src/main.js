@@ -21,7 +21,7 @@ let config = {
     },
     width: 1100,
     height: 800,
-    scene: [GalleryShooter] // TODO: add scenes
+    scene: [Title, Intro, GalleryShooter] // TODO: add scenes
 }
 
 const game = new Phaser.Game(config);

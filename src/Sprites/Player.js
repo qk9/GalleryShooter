@@ -61,4 +61,17 @@ class Player extends Phaser.GameObjects.Sprite {
         }
     }
 
+    // used for title screen animation
+    moveTo(x) {
+        let newPos = this.positions[x];
+        this.pos = x;
+        this.currTween = this.scene.tweens.add({
+            targets: this,
+            x: newPos,
+            y: this.y,
+            duration: 2500,
+            ease: 'Quad.easeOut'
+        });
+    }
+
 }

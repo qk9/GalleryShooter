@@ -113,6 +113,33 @@ class GunStrong extends Phaser.GameObjects.Sprite {
         })
     }
 
+    // used for title screen animation
+    moveToSlow(x) {
+        if (this.currMoveTween) {
+                this.currMoveTween.stop();
+                this.currMoveTween.destroy();
+            }
+        if (this.currBaseTwistTween) {
+            this.currBaseTwistTween.stop();
+            this.currBaseTwistTween.destroy();
+        }
+        let newPos = x;
+        let tweenDur = 3500/*Math.abs(this.x - newPos) * this.movementSpeed*/;
+        this.currMoveTween = this.scene.tweens.add({
+            targets: this,
+            x: newPos,
+            duration: tweenDur,
+            ease: 'Quad.easeInOut'
+        });
+        let rotDistance = (this.x - newPos) / -40;
+        this.currBaseTwistTween = this.scene.tweens.add({
+            targets: this,
+            rotation: this.rotation + rotDistance,
+            duration: tweenDur,
+            ease: 'Quad.easeInOut'
+        })
+    }
+
     twistInnerToAngle(inRads) {
         if (this.currInnerTwistTween) {
             this.currInnerTwistTween.stop();

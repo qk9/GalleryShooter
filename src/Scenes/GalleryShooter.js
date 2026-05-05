@@ -54,7 +54,6 @@ class GalleryShooter extends Phaser.Scene {
 
     init_game() {
         // set constants
-        
         this.my = {sprite: {}};
         this.path = {sprites: []};
 
@@ -100,7 +99,6 @@ class GalleryShooter extends Phaser.Scene {
         // create keybinds
         this.leftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         this.rightKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-        this.prepShootStrongKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         this.shootStrongKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         // create background
@@ -336,7 +334,7 @@ class GalleryShooter extends Phaser.Scene {
             }
         }
         else if (this.gameOverText == null) { // game is over
-            this.gameOverText = this.add.text(game.config.width / 2 - 350, game.config.height / 2 - 400, "    Game over!\nPress R to restart.", {fontSize: 64, strokeThickness: 5});
+            this.gameOverText = this.add.text(game.config.width / 2 - 350, game.config.height / 2 - 400, "Game over!\nPress R to restart.\nYour score: " + this.playerScore, {fontSize: 64, strokeThickness: 5, align: 'center'});
             this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
             // freeze all enemies
             for (let column of this.enemies) {
@@ -351,7 +349,7 @@ class GalleryShooter extends Phaser.Scene {
             }
             // stop enemy movement timeline
             this.moveTimeline.stop();
-            this.UIText.text = "Health: 0";
+            this.UIText.text = "Health: 0" + "\nScore: " + this.playerScore;
         }
         else { // game has been over
             if (Phaser.Input.Keyboard.JustDown(this.restartKey)) {

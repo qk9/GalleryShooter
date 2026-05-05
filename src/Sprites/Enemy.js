@@ -4,7 +4,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 index) {
         super(scene,
               x * scene.pathHorizSpacing + scene.pathHorizLeftBuffer, 
-              y * scene.pathVertSpacing + scene.pathVertTopBuffer + ((x + 1) % 2 * scene.pathVertSpacing / 2) - 100,
+              /*y * scene.pathVertSpacing + scene.pathVertTopBuffer + ((x + 1) % 2 * scene.pathVertSpacing / 2)*/ - 100,
               texture, frame);
 
         this.xIndex = x;
@@ -16,6 +16,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.moves = ["any", "any", "any"];
         this.moveIndex = 0;
         this.moving = false;
+        this.hasAffectedMoves = false;
 
         this.leftLine = new Phaser.Geom.Line(this.x - this.displayWidth / 2, this.y,
                                              this.x - this.displayWidth / 2 - 50, this.y);
@@ -87,7 +88,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
             this.weapon.update();
         }
 
-        if (this.getMoveSum() != this.xIndex) {
+        if (this.hasAffectedMoves) {
             this.showPossibleMoves();
         }
     }
@@ -112,6 +113,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
     addMove(dir) {
         this.moves.shift();
         this.moves.push(dir);
+        this.hasAffectedMoves = true;
     }
 
     knowsDestination() {
@@ -128,6 +130,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         if (Object.hasOwn(this, "moveChain")) {
             delete this.moveChain;
         }
+        this.hasAffectedMoves = false;
         this.moves = ["any", "any", "any"];
     }
 
