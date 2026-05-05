@@ -318,6 +318,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
     atBottom() {
         this.scene.my.sprite.player.health -= 4;
+        this.scene.playerScore -= 10;
         this.kill();
     }
 
@@ -332,6 +333,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
             this.weapon.firingAnim.stop();
             this.weapon.firingAnim.destroy();
         }
+        this.scene.playerScore += 10;
         this.scene.explosions.push(new Explosion(this.scene, this.x, this.y, this.scene.textures.get("explosion"), null));
         this.scene.enemyDeathSound.play();
         this.scene.numLivingEnemies--;

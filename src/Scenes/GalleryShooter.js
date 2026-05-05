@@ -64,6 +64,7 @@ class GalleryShooter extends Phaser.Scene {
         this.playerY = game.config.height - 150;
         this.playerSpeed = 1;
         this.playerHealth = 20;
+        this.playerScore = 0;
         this.positions = [
                           50, 
                           gameWidth / 5 + 50,
@@ -91,8 +92,8 @@ class GalleryShooter extends Phaser.Scene {
         // enemy stats
         this.enemyIndex = 0;
 
-        this.enemySpeed = 100;
-        this.enemyMoveGap = 100;
+        this.enemySpeed = 750;
+        this.enemyMoveGap = 4000;
 
         this.enemyCycleTime = this.enemyMoveGap + 3 * this.enemySpeed;
 
@@ -104,7 +105,7 @@ class GalleryShooter extends Phaser.Scene {
 
         // create background
         for(let currX = 64; currX < game.config.width; currX += 128) {
-            for(let currY = this.sandbagY - 64; currY > 0; currY -= 128) {
+            for(let currY = this.sandbagY - 64; currY > -64; currY -= 128) {
                 this.add.sprite(currX, currY, "dirt");
             }
             for(let currY = this.sandbagY + 64; currY < game.config.height; currY += 128) {
@@ -299,7 +300,7 @@ class GalleryShooter extends Phaser.Scene {
         this.waveSegments = []; // push [numEnemies, formation] pairs here
 
         // ui
-        this.healthText = this.add.text(10, game.config.height - 10 - 32, "Health: " + this.playerHealth, {fontSize: 32, strokeThickness: 3, fill: 'black', stroke: 'black'});
+        this.UIText = this.add.text(10, game.config.height - 74, "Health: " + this.playerHealth + "\nScore: " + this.playerScore, {fontSize: 32, strokeThickness: 3, fill: 'black', stroke: 'black'});
         this.gameOverText = null;
         this.restartKey = null;
     }
@@ -322,12 +323,12 @@ class GalleryShooter extends Phaser.Scene {
                 this.moveTimeline.play(true);
             }
             // move health UI out from behind gunStrong if needed
-            this.healthText.text = "Health: " + this.my.sprite.player.health;
-            if (this.my.sprite.gunStrong.x < 300 && this.healthText.x == 10) {
-                this.healthText.x = 350;
+            this.UIText.text = "Health: " + this.my.sprite.player.health + "\nScore: " + this.playerScore;
+            if (this.my.sprite.gunStrong.x < 300 && this.UIText.x == 10) {
+                this.UIText.x = 350;
             }
-            else if (this.my.sprite.gunStrong.x >= 300 && this.healthText.x == 350) {
-                this.healthText.x = 10;
+            else if (this.my.sprite.gunStrong.x >= 300 && this.UIText.x == 350) {
+                this.UIText.x = 10;
             }
             // spawn next wave if needed
             if (!Object.hasOwn(this, "waveSpawner") && this.numLivingEnemies == 0) {
@@ -350,7 +351,7 @@ class GalleryShooter extends Phaser.Scene {
             }
             // stop enemy movement timeline
             this.moveTimeline.stop();
-            this.healthText.text = "Health: 0";
+            this.UIText.text = "Health: 0";
         }
         else { // game has been over
             if (Phaser.Input.Keyboard.JustDown(this.restartKey)) {
@@ -360,17 +361,15 @@ class GalleryShooter extends Phaser.Scene {
     }
 
     spawnWave() {
-        // reset current wave segments
+        // reset wave data storage
         this.waveSpawnIndex = 0;
         this.waveSegments = [];
-        if (!Object.hasOwn(this, "waveSpawner")) {
-            this.waveSpawner = this.add.timeline([]);
-        }
+        this.waveSpawner = this.add.timeline([]);
+
         // iterate wave difficulty
-        else {
+        if (this.currWave > 0) {
+            this.playerScore += 50;
             this.increaseDifficulty();
-            this.currWave++;
-            this.waveSpawner.clear();
         }
 
         // generate current wave segments
@@ -407,6 +406,7 @@ class GalleryShooter extends Phaser.Scene {
             run() {
                 this.waveSpawner.destroy();
                 delete this.waveSpawner;
+                this.currWave++;
             },
             target: this
         })

@@ -20,7 +20,7 @@ let config = {
         pixelArt: true  // prevent pixel art from getting blurred when scaled
     },
     width: 1100,
-    height: 1000,
+    height: 800,
     scene: [GalleryShooter] // TODO: add scenes
 }
 
