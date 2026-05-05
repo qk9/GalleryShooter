@@ -9,11 +9,13 @@ class GalleryShooter extends Phaser.Scene {
         // player's tank
         this.load.image("playerBody", "Tanks/tankBlack.png");
         this.load.image("playerGun", "Obstacles/barrelGrey_side.png");
+        this.load.audio("gunWeakShotSound", "Sounds/laserSmall_003.ogg")
 
         // parts of strong gun
         this.load.image("gunStrongArm", "Tanks/barrelBlack_outline.png");
         this.load.image("gunStrongJoint", "Obstacles/oil.png");
         this.load.image("gunStrongBarrel", "Obstacles/barrelGrey_side.png");
+        this.load.audio("gunStrongShotSound", "Sounds/laserLarge_001.ogg");
 
         // parts of firing clock
         this.load.image("clockFaceUnready", "Obstacles/barrelGrey_up.png");
@@ -26,6 +28,11 @@ class GalleryShooter extends Phaser.Scene {
         this.load.image("enemyGun", "Tanks/barrelBeige_outline.png");
         this.load.image("enemySniperBody", "Tanks/tankRed.png");
         this.load.image("enemySniperGun", "Tanks/barrelRed_outline.png");
+        this.load.audio("enemyShootSound", "Sounds/laserSmall_001.ogg");
+        this.load.audio("enemyDeathSound", "Sounds/explosionCrunch_000.ogg");
+
+        // enemy death explosion
+        this.load.image("explosion", "Smoke/smokeOrange0.png");
 
         // player's fortress
         this.load.image("sandbag", "Obstacles/sandbagBeige.png");
@@ -84,8 +91,8 @@ class GalleryShooter extends Phaser.Scene {
         // enemy stats
         this.enemyIndex = 0;
 
-        this.enemySpeed = 750;
-        this.enemyMoveGap = 4000;
+        this.enemySpeed = 100;
+        this.enemyMoveGap = 100;
 
         this.enemyCycleTime = this.enemyMoveGap + 3 * this.enemySpeed;
 
@@ -147,15 +154,20 @@ class GalleryShooter extends Phaser.Scene {
                                              this.my.sprite.player.x, this.my.sprite.player.y,
                                              "playerGun", null,
                                              this.my.sprite.player);
+        this.gunWeakSound = this.sound.add("gunWeakShotSound", {volume: 0.8});
         
         this.my.sprite.gunStrong = new GunStrong(this, 
                                                  this.gunStrongX, this.gunStrongY,
                                                  this.positions,
                                                  "gunStrongJoint", "gunStrongArm", "gunStrongBarrel", null,
                                                  this.shootStrongKey, this.gunStrongCooldown);
+        this.gunStrongShotSound = this.sound.add("gunStrongShotSound");
         
         this.input.on('pointerdown', this.my.sprite.gunWeak.fire);
         
+        // load enemy data
+        this.enemyShootSound = this.sound.add("enemyShootSound");
+        this.enemyDeathSound = this.sound.add("enemyDeathSound", {volume: 0.6});
         // create enemy storage
         // enemies stored by current column for collision detection
         if (this.enemies) {
@@ -169,6 +181,9 @@ class GalleryShooter extends Phaser.Scene {
         for (let i = 0; i < this.pathColumns; i++) {
             this.enemies.push({});
         }
+        
+        this.explosions = [];
+
         // store number of living enemies for next-wave rollover
         this.numLivingEnemies = 0;
 
@@ -360,7 +375,6 @@ class GalleryShooter extends Phaser.Scene {
 
         // generate current wave segments
         let enemiesToSpawn = 5 + (this.currWave * 2);
-        console.log("enemiesToSpawn: ", enemiesToSpawn);
         while (enemiesToSpawn > 0) {
             let index = -1;
             if (enemiesToSpawn > 14) {
@@ -371,7 +385,6 @@ class GalleryShooter extends Phaser.Scene {
             if (index == -1) {
                 index = Math.floor(Math.random() * Math.min(enemiesToSpawn, 8) + 1);
             }
-            console.log("index: ", index);
             this.waveSegments.push(this.waves[index.toString()][Math.floor(Math.random() * this.waves[index.toString()].length)]);
             enemiesToSpawn -= index;
         }

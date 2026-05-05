@@ -95,6 +95,10 @@ class EnemyWeapon extends Phaser.GameObjects.Sprite {
         this.drawLaser(graphics, line.x1, line.y1, line.x2, line.y2, 10);
         this.targetGeom.clear();
         this.scene.children.bringToTop(this);
+
+        if (!this.scene.enemyShootSound.isPlaying) {
+            this.scene.enemyShootSound.play();
+        }
     }
 
     handleCollisionChecks(line) {

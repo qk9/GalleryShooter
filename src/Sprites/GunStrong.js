@@ -348,6 +348,7 @@ class GunStrong extends Phaser.GameObjects.Sprite {
                 from: this.movementTime * 1.25,
                 run() {
                     this.fire(this.targetX, this.targetY);
+                    this.scene.gunStrongShotSound.play();
                     this.targetGeom.clear();
                     this.firingClock.changeState(false);
                 },

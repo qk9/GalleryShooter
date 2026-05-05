@@ -41,6 +41,7 @@ class GunWeak extends Phaser.GameObjects.Sprite {
         var graphics = this.scene.add.graphics();
         gunWeak.drawWeakLaser(graphics, line.x1, line.y1, line.x2, line.y2, 10);
         this.scene.children.bringToTop(gunWeak);
+        this.scene.gunWeakSound.play();
     }
 
     handleCollisionChecks(line) {
@@ -54,11 +55,9 @@ class GunWeak extends Phaser.GameObjects.Sprite {
             for (let enemy in currList) {
                 let currEnemy = currList[enemy];
                 if (Phaser.Geom.Intersects.LineToLine(line, currEnemy.leftLine) && currEnemy.getMoveSum() < this.scene.path.sprites.length - 1) {
-                    console.log(currEnemy.getMoveSum());
                     currEnemy.addMove("right");
                 }
                 else if (Phaser.Geom.Intersects.LineToLine(line, currEnemy.rightLine) && currEnemy.getMoveSum() > 0) {
-                    console.log(currEnemy.getMoveSum());
                     currEnemy.addMove("left");
                 }
             }

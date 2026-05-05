@@ -47,7 +47,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 this.startTween.destroy();
                 delete this.startTween;
             }
-        })
+        });
         
         scene.add.existing(this);
         return this;
@@ -332,6 +332,8 @@ class Enemy extends Phaser.GameObjects.Sprite {
             this.weapon.firingAnim.stop();
             this.weapon.firingAnim.destroy();
         }
+        this.scene.explosions.push(new Explosion(this.scene, this.x, this.y, this.scene.textures.get("explosion"), null));
+        this.scene.enemyDeathSound.play();
         this.scene.numLivingEnemies--;
         this.weapon.targetGeom.clear();
         this.weapon.targetGeom.destroy();
