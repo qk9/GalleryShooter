@@ -25,12 +25,23 @@ class EnemyWeapon extends Phaser.GameObjects.Sprite {
     }
 
     attack(position) {
-        this.targetX = this.scene.positions[position];
+        this.targetX = this.x/*this.scene.positions[position]*/;
         this.targetY = this.scene.my.sprite.player.y;
         let rotAngle = Phaser.Math.Angle.Between(this.x, this.y, this.targetX, this.targetY) + Math.PI / 2;
         if (Math.abs(rotAngle - this.rotation) > Math.PI) {
-            rotAngle = Math.sign(rotAngle) * -2 * Math.PI + rotAngle;
+            if (rotAngle > this.rotation) {
+                rotAngle -= 2 * Math.PI;
+            }
+            else {
+                rotAngle += 2 * Math.PI;
+            }
+            //rotAngle = Math.sign(rotAngle) * -2 * Math.PI + rotAngle;
         }
+        let backAngle = this.rotation;
+        if (rotAngle > this.rotation) {
+            backAngle -= 2 * Math.PI;
+        }
+        
         this.firingAnim = this.scene.add.timeline([
             {
                 at: 0,
@@ -56,7 +67,7 @@ class EnemyWeapon extends Phaser.GameObjects.Sprite {
                 from: 100,
                 tween: {
                     targets: this,
-                    rotation: this.enemy.rotation,
+                    rotation: backAngle,
                     ease: 'Quad.easeInOut',
                     duration: this.firingDelay
                 }

@@ -4,7 +4,7 @@ class GalleryShooter extends Phaser.Scene {
     }
     
     preload() {
-        this.load.setPath("./assets/")
+        this.load.setPath("./assets/");
 
         // player's tank
         this.load.image("playerBody", "Tanks/tankBlack.png");
@@ -23,7 +23,9 @@ class GalleryShooter extends Phaser.Scene {
 
         // enemy tanks
         this.load.image("enemyBody", "Tanks/tankBeige.png");
-        this.load.image("enemyGun", "Tanks/barrelBeige_outline.png")
+        this.load.image("enemyGun", "Tanks/barrelBeige_outline.png");
+        this.load.image("enemySniperBody", "Tanks/tankRed.png");
+        this.load.image("enemySniperGun", "Tanks/barrelRed_outline.png");
 
         // player's fortress
         this.load.image("sandbag", "Obstacles/sandbagBeige.png");
@@ -51,6 +53,7 @@ class GalleryShooter extends Phaser.Scene {
 
         let gameWidth = game.config.width - 100;
 
+        // player positions
         this.playerY = game.config.height - 150;
         this.playerSpeed = 1;
         this.playerHealth = 3;
@@ -65,7 +68,7 @@ class GalleryShooter extends Phaser.Scene {
 
         this.sandbagY = this.playerY - 80;
 
-        // constants for path node loading
+        // path node constants
         this.pathColumns = 15;
         this.pathRows = 10;
         this.pathHorizLeftBuffer = 50;
@@ -73,27 +76,24 @@ class GalleryShooter extends Phaser.Scene {
         this.pathVertTopBuffer = 10;
         this.pathVertSpacing = (this.sandbagY - this.pathVertTopBuffer) / this.pathRows;
 
+        // strong gun stats
         this.gunStrongX = game.config.width / 2;
         this.gunStrongY = game.config.height;
         this.gunStrongCooldown = 4000;
 
+        // enemy stats
         this.enemyIndex = 0;
 
         this.enemySpeed = 750;
-        this.enemyMoveGap = 2500;
+        this.enemyMoveGap = 4000;
 
         this.enemyCycleTime = this.enemyMoveGap + 3 * this.enemySpeed;
-
-        this.prototypes = {sprite: {}};
 
         // create keybinds
         this.leftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         this.rightKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.prepShootStrongKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         this.shootStrongKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
-        // temp, for testing
-        this.mKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
 
         // create background
         for(let currX = 64; currX < game.config.width; currX += 128) {
@@ -112,12 +112,16 @@ class GalleryShooter extends Phaser.Scene {
             currX += 66;
         }
 
-        // create rails
+        // create player movement rails
         currX = 0;
         while(currX < game.config.width) {
             this.currTracks = this.add.sprite(currX + 30, this.playerY, "tracks");
             this.currTracks.angle = 90;
             currX += 114;
+        }
+        for (let i = 0; i < this.positions.length; i++) {
+            this.currOil = this.add.sprite(this.positions[i], this.playerY, "pathMaybe");
+            this.currOil.setScale(0.1, 0.1);
         }
 
         // create pathway nodes
@@ -153,14 +157,20 @@ class GalleryShooter extends Phaser.Scene {
         this.input.on('pointerdown', this.my.sprite.gunWeak.fire);
         
         // create enemy storage
-
         // enemies stored by current column for collision detection
+        if (this.enemies) {
+            for (let column of this.enemies) {
+                for (let enemy in column) {
+                    column[enemy].kill();
+                }
+            }
+        }
         this.enemies = [];
         for (let i = 0; i < this.pathColumns; i++) {
             this.enemies.push({});
         }
 
-        // enemy turn timeline
+        // create enemy turn timeline
         this.moveTimeline = this.add.timeline([
             {
                 at: this.enemyCycleTime / 2,
@@ -177,8 +187,6 @@ class GalleryShooter extends Phaser.Scene {
             {
                 at: this.enemyCycleTime,
                 run() {
-                    console.log("enemy cycle complete");
-                    console.log(this.scene.my.sprite.gunStrong.firingClock.handFireAngle);
                 }
             },
             { // for testing
@@ -221,29 +229,41 @@ class GalleryShooter extends Phaser.Scene {
                 this.healthText.x = 10;
             }
         }
-        else if (this.gameOverText == null) {
+        else if (this.gameOverText == null) { // game is over
             this.gameOverText = this.add.text(game.config.width / 2 - 350, game.config.height / 2 - 400, "    Game over!\nPress R to restart.", {fontSize: 64, strokeThickness: 5});
             this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+            // freeze all enemies
             for (let column of this.enemies) {
                 for (let enemy in column) {
-                    column[enemy].kill();
+                    if (Object.hasOwn(column[enemy], "moveChain")) {
+                        column[enemy].moveChain.stop();
+                    }
+                    if (Object.hasOwn(column[enemy].weapon, "firingAnim")) {
+                        column[enemy].weapon.firingAnim.stop();
+                    }
                 }
             }
-            this.healthText.text = "Health: " + this.my.sprite.player.health;
+            // stop enemy movement timeline
+            this.moveTimeline.stop();
+            this.healthText.text = "Health: 0";
         }
-        else {
+        else { // game has been over
             if (Phaser.Input.Keyboard.JustDown(this.restartKey)) {
                 this.init_game();
             }
         }
     }
 
+    spawnWave(wave) {
+
+    }
+
     // summon an enemy at the top of the given column.
     summonEnemyInColumn(col) {
-        this.enemies[col][this.enemyIndex.toString()] = new Enemy(this, col, 0, this.enemySpeed, "enemyBody", null, this.enemyIndex);
+        this.enemies[col][this.enemyIndex.toString()] = new Enemy(this, col, 0, "enemyBody", null, this.enemyIndex);
         this.enemies[col][this.enemyIndex.toString() - 1].setWeapon(new EnemyWeapon(this, 0, 0,
                                                                                     this.enemies[col][this.enemyIndex.toString() - 1],
-                                                                                    (this.enemyCycleTime - 3 * this.enemySpeed - 100) / 2,
+                                                                                    (this.enemyMoveGap - 300) / 2,
                                                                                     "enemyGun", null));
         return this.enemies[col][(this.enemyIndex - 1).toString()];
     }

@@ -26,17 +26,15 @@ class GunWeak extends Phaser.GameObjects.Sprite {
     }
 
     fire() {
-        // store pointers to mouse and gun barrel
-        let pointer = this.scene.input.activePointer;
         let gunWeak = this.scene.my.sprite.gunWeak;
 
         // create hitbox line directly from barrel tip through mouse pointer to screen border
-        let ang = Phaser.Math.Angle.Between(gunWeak.x, gunWeak.y, this.x, this.y) // "this" will be active pointer, should change later
         var line = Phaser.Geom.Line.SetToAngle(new Phaser.Geom.Line(), 
-                                               gunWeak.x + (0.75 * 58 * Math.cos(ang)),
-                                               gunWeak.y + (0.75 * 58 * Math.sin(ang)),
-                                               ang, 1310);
+                                               gunWeak.x + (0.75 * 58 * Math.cos(gunWeak.rotation - Math.PI / 2)),
+                                               gunWeak.y + (0.75 * 58 * Math.sin(gunWeak.rotation - Math.PI / 2)),
+                                               gunWeak.rotation - Math.PI / 2, 1310);
         
+        // check collisions based off hitbox line
         gunWeak.handleCollisionChecks(line);
 
         // draw laser graphic based on hitbox line

@@ -1,6 +1,5 @@
 class Enemy extends Phaser.GameObjects.Sprite {
     constructor(scene, x, y,
-                speed,
                 texture, frame,
                 index) {
         super(scene,
@@ -14,9 +13,6 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.sceneIndex = index;
         this.scene.enemyIndex++;
 
-        //this.x = x * scene.pathHorizSpacing + scene.pathHorizLeftBuffer;
-        //this.y = y * scene.pathVertSpacing + scene.pathVertTopBuffer + ((x + 1) % 2 * scene.pathVertSpacing / 2);
-        this.speed = speed;
         this.moves = ["any", "any", "any"];
         this.moveIndex = 0;
         this.moving = false;
@@ -263,12 +259,10 @@ class Enemy extends Phaser.GameObjects.Sprite {
         // if the enemy is done moving
         if (this.moveIndex >= this.moves.length) {
             this.moveIndex = 0;
-            if (this.yIndex < this.oldYIndex) {
+            if (/*this.yIndex < this.oldYIndex*/true) {
                 this.weapon.attack(this.scene.my.sprite.player.pos);
             }
             this.resetMoves();
-            console.log("moving cycle complete");
-            console.log(this.scene.my.sprite.gunStrong.firingClock.handFireAngle);
             return;
         }
         // if the enemy is at the very bottom of the map
