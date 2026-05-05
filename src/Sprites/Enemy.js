@@ -317,7 +317,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
     }
 
     atBottom() {
-        this.scene.my.sprite.player.health -= 10;
+        this.scene.my.sprite.player.health -= 4;
         this.kill();
     }
 

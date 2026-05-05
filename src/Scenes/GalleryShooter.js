@@ -56,7 +56,7 @@ class GalleryShooter extends Phaser.Scene {
         // player positions
         this.playerY = game.config.height - 150;
         this.playerSpeed = 1;
-        this.playerHealth = 3;
+        this.playerHealth = 20;
         this.positions = [
                           50, 
                           gameWidth / 5 + 50,
